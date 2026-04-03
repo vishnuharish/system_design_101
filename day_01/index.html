@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Day 01: Introduction to System Design - System Design in 90 Days</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../css/brands.min.css" rel="stylesheet">
+        <link href="../css/solid.min.css" rel="stylesheet">
+        <link href="../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">System Design in 90 Days</a>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#day-01-introduction-to-system-design" class="nav-link">Day 01: Introduction to System Design</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#theory" class="nav-link">📖 Theory</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#what-is-system-design" class="nav-link">What is System Design?</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#key-concepts" class="nav-link">🔑 Key Concepts</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#javascript-example" class="nav-link">💛 JavaScript Example</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#python-example" class="nav-link">🐍 Python Example</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#homework" class="nav-link">📝 Homework</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#resources" class="nav-link">📚 Resources</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="day-01-introduction-to-system-design">Day 01: Introduction to System Design</h1>
+<blockquote>
+<p><em>Why systems break and how engineers plan them</em></p>
+</blockquote>
+<p><strong>Month 1: Foundations › Week 1: Basics of System Design</strong><br />
+<strong>Tags:</strong> <code>Theory</code> <code>Concepts</code><br />
+<strong>Estimated Time:</strong> 90–120 minutes</p>
+<hr />
+<h2 id="theory">📖 Theory</h2>
+<h2 id="what-is-system-design">What is System Design?</h2>
+<p><strong>System Design</strong> is the process of planning how a software application will work at a large scale — handling millions of users, storing huge amounts of data, and staying fast and reliable.</p>
+<p>Think of it like designing a city. A small village doesn't need traffic lights or highways. But a big city needs roads, bridges, water systems, and electricity grids — all working together. Software is exactly the same.</p>
+<h3 id="why-does-it-matter">Why Does It Matter?</h3>
+<p>A simple app for 10 friends is easy to build. But building <strong>Instagram</strong>, <strong>YouTube</strong>, or <strong>WhatsApp</strong> for billions of people requires careful planning before writing a single line of code.</p>
+<h3 id="key-questions-system-design-answers">Key Questions System Design Answers:</h3>
+<ul>
+<li>How do we store millions of user photos?</li>
+<li>How do we handle 100,000 simultaneous users?</li>
+<li>What happens when one server crashes?</li>
+<li>How do we keep the app fast for users worldwide?</li>
+</ul>
+<h3 id="the-4-pillars-of-system-design">The 4 Pillars of System Design:</h3>
+<table>
+<thead>
+<tr>
+<th>Pillar</th>
+<th>Meaning</th>
+<th>Real Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Scalability</strong></td>
+<td>Handle more users</td>
+<td>Netflix scales to 220M subscribers</td>
+</tr>
+<tr>
+<td><strong>Reliability</strong></td>
+<td>Stay up always</td>
+<td>Google targets 99.99% uptime</td>
+</tr>
+<tr>
+<td><strong>Performance</strong></td>
+<td>Be fast</td>
+<td>Search results in &lt; 200ms</td>
+</tr>
+<tr>
+<td><strong>Maintainability</strong></td>
+<td>Easy to fix/update</td>
+<td>Teams can ship daily</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-system-design-process">The System Design Process:</h3>
+<ol>
+<li><strong>Clarify Requirements</strong> — What does the system need to do?</li>
+<li><strong>Estimate Scale</strong> — How many users? How much data?</li>
+<li><strong>Define APIs</strong> — What are the interfaces between components?</li>
+<li><strong>Design Data Model</strong> — What data needs to be stored and how?</li>
+<li><strong>High-Level Architecture</strong> — Draw the main components</li>
+<li><strong>Deep Dive</strong> — Detail the most critical/complex components</li>
+<li><strong>Identify Bottlenecks</strong> — What could break at scale?</li>
+</ol>
+<hr />
+<h3 id="real-world-analogy-the-school-canteen">🏫 Real-World Analogy: The School Canteen</h3>
+<p>Your school canteen works perfectly for 200 students. Now imagine feeding <strong>200,000 students</strong> at the same time.</p>
+<p>You'd need:
+- Multiple food stalls <strong>(multiple servers)</strong>
+- Separate queues for different foods <strong>(load balancing)</strong>
+- Backup cooks for when one is sick <strong>(redundancy)</strong>
+- A huge storage room <strong>(database)</strong>
+- A manager to direct people <strong>(orchestration)</strong></p>
+<p><strong>That's system design</strong> — thinking through all the components you need before problems hit.</p>
+<hr />
+<h2 id="key-concepts">🔑 Key Concepts</h2>
+<ul>
+<li><strong>Scalability</strong></li>
+<li><strong>Reliability</strong></li>
+<li><strong>Performance</strong></li>
+<li><strong>Maintainability</strong></li>
+<li><strong>High Availability</strong></li>
+<li><strong>Fault Tolerance</strong></li>
+<li><strong>Throughput</strong></li>
+<li><strong>Latency</strong></li>
+</ul>
+<hr />
+<h2 id="javascript-example">💛 JavaScript Example</h2>
+<pre><code class="language-javascript">// Simulating system capacity and what happens at scale
+class SimpleSystem {
+  constructor(name, capacity) {
+    this.name = name;
+    this.capacity = capacity;  // max concurrent users
+    this.currentUsers = 0;
+    this.rejectedRequests = 0;
+    this.totalRequests = 0;
+  }
+
+  handleRequest(userId) {
+    this.totalRequests++;
+    if (this.currentUsers &gt;= this.capacity) {
+      this.rejectedRequests++;
+      console.log(`❌ [${this.name}] OVERLOADED! User ${userId} rejected.`);
+      return false;
+    }
+    this.currentUsers++;
+    console.log(`✅ [${this.name}] Serving User ${userId}. Load: ${this.currentUsers}/${this.capacity}`);
+
+    // Simulate request processing (user leaves after 100ms)
+    setTimeout(() =&gt; this.currentUsers--, 100);
+    return true;
+  }
+
+  getStats() {
+    return {
+      name: this.name,
+      capacity: this.capacity,
+      successRate: `${((this.totalRequests - this.rejectedRequests) / this.totalRequests * 100).toFixed(1)}%`,
+      rejections: this.rejectedRequests
+    };
+  }
+}
+
+// Small system — breaks quickly
+const blogServer = new SimpleSystem(&quot;My Blog&quot;, 3);
+for (let i = 1; i &lt;= 7; i++) {
+  blogServer.handleRequest(`user_${i}`);
+}
+console.log(&quot;\nStats:&quot;, blogServer.getStats());
+
+// Solution: multiple servers (scale out)
+const servers = ['Server-A', 'Server-B', 'Server-C'].map(
+  name =&gt; new SimpleSystem(name, 3)
+);
+let currentServer = 0;
+
+function handleWithLoadBalancing(userId) {
+  // Round-robin across servers
+  const server = servers[currentServer % servers.length];
+  currentServer++;
+  return server.handleRequest(userId);
+}
+
+console.log(&quot;\n--- With Load Balancing ---&quot;);
+for (let i = 1; i &lt;= 7; i++) {
+  handleWithLoadBalancing(`user_${i}`);
+}
+</code></pre>
+<hr />
+<h2 id="python-example">🐍 Python Example</h2>
+<pre><code class="language-python"># Simulating system capacity and what happens under load
+
+import time
+import threading
+
+class SimpleSystem:
+    def __init__(self, name: str, capacity: int):
+        self.name = name
+        self.capacity = capacity
+        self.current_users = 0
+        self.total_requests = 0
+        self.rejected = 0
+        self._lock = threading.Lock()
+
+    def handle_request(self, user_id: str) -&gt; bool:
+        with self._lock:
+            self.total_requests += 1
+            if self.current_users &gt;= self.capacity:
+                self.rejected += 1
+                print(f&quot;❌ [{self.name}] OVERLOADED! {user_id} rejected.&quot;)
+                return False
+            self.current_users += 1
+
+        load_pct = (self.current_users / self.capacity) * 100
+        print(f&quot;✅ [{self.name}] Serving {user_id}. &quot;
+              f&quot;Load: {self.current_users}/{self.capacity} ({load_pct:.0f}%)&quot;)
+
+        # Simulate request processing time
+        time.sleep(0.1)
+
+        with self._lock:
+            self.current_users -= 1
+        return True
+
+    def get_stats(self) -&gt; dict:
+        success_rate = ((self.total_requests - self.rejected) /
+                       max(self.total_requests, 1) * 100)
+        return {
+            'name': self.name,
+            'capacity': self.capacity,
+            'total_requests': self.total_requests,
+            'rejected': self.rejected,
+            'success_rate': f&quot;{success_rate:.1f}%&quot;
+        }
+
+# Single small server — breaks fast
+print(&quot;=== Single Small Server ===&quot;)
+blog = SimpleSystem(&quot;My Blog&quot;, 3)
+threads = [threading.Thread(target=blog.handle_request, args=(f&quot;user_{i}&quot;,))
+           for i in range(1, 8)]
+for t in threads:
+    t.start()
+for t in threads:
+    t.join()
+
+print(f&quot;\nStats: {blog.get_stats()}&quot;)
+
+# With multiple servers (horizontal scaling)
+print(&quot;\n=== With Multiple Servers (Scale Out) ===&quot;)
+servers = [SimpleSystem(f&quot;Server-{c}&quot;, 3) for c in ['A', 'B', 'C']]
+counter = 0
+
+def load_balanced_request(user_id: str):
+    global counter
+    server = servers[counter % len(servers)]
+    counter += 1
+    return server.handle_request(user_id)
+
+threads = [threading.Thread(target=load_balanced_request, args=(f&quot;user_{i}&quot;,))
+           for i in range(1, 8)]
+for t in threads:
+    t.start()
+for t in threads:
+    t.join()
+
+for s in servers:
+    print(f&quot;Stats {s.name}: {s.get_stats()}&quot;)
+</code></pre>
+<hr />
+<h2 id="homework">📝 Homework</h2>
+<ol>
+<li>Draw a simple diagram of Instagram and identify all its main components</li>
+<li>Write down 5 questions you would ask before designing a new social media app</li>
+<li>Research: What does '99.99% uptime' mean in actual downtime minutes per year?</li>
+<li>Find an engineering blog post from Netflix or Uber about a scaling challenge they solved</li>
+</ol>
+<hr />
+<h2 id="resources">📚 Resources</h2>
+<ul>
+<li>System Design Interview by Alex Xu (must read)</li>
+<li>Designing Data-Intensive Applications by Martin Kleppmann</li>
+<li>System Design Primer on GitHub — github.com/donnemartin/system-design-primer</li>
+<li>High Scalability Blog — highscalability.com</li>
+</ul>
+<hr />
+<p><em>← <a href="../">Index</a> | <a href="../">Index</a> | <a href="../day_02/">Day 02</a> →</em></p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js"></script>
+        <script src="../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

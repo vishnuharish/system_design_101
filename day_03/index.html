@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Day 03: APIs &amp; HTTP Methods - System Design in 90 Days</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../css/brands.min.css" rel="stylesheet">
+        <link href="../css/solid.min.css" rel="stylesheet">
+        <link href="../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">System Design in 90 Days</a>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#day-03-apis-http-methods" class="nav-link">Day 03: APIs &amp; HTTP Methods</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#theory" class="nav-link">📖 Theory</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#apis-and-http" class="nav-link">APIs and HTTP</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#key-concepts" class="nav-link">🔑 Key Concepts</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#javascript-example" class="nav-link">💛 JavaScript Example</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#python-example" class="nav-link">🐍 Python Example</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#homework" class="nav-link">📝 Homework</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#resources" class="nav-link">📚 Resources</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="day-03-apis-http-methods">Day 03: APIs &amp; HTTP Methods</h1>
+<blockquote>
+<p><em>The universal language connecting all systems</em></p>
+</blockquote>
+<p><strong>Month 1: Foundations › Week 1: Basics of System Design</strong><br />
+<strong>Tags:</strong> <code>Theory</code> <code>JavaScript</code> <code>Python</code><br />
+<strong>Estimated Time:</strong> 90–120 minutes</p>
+<hr />
+<h2 id="theory">📖 Theory</h2>
+<h2 id="apis-and-http">APIs and HTTP</h2>
+<h3 id="what-is-an-api">What is an API?</h3>
+<p>An <strong>API (Application Programming Interface)</strong> is a contract between two systems that defines how they can communicate. It specifies:
+- What operations are available
+- What data format to use
+- What authentication is required
+- What responses to expect</p>
+<h3 id="http-methods-crud-operations">HTTP Methods (CRUD Operations)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Operation</th>
+<th>SQL Equivalent</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GET</strong></td>
+<td>Read</td>
+<td>SELECT</td>
+<td>Fetch a user profile</td>
+</tr>
+<tr>
+<td><strong>POST</strong></td>
+<td>Create</td>
+<td>INSERT</td>
+<td>Create a new post</td>
+</tr>
+<tr>
+<td><strong>PUT</strong></td>
+<td>Replace</td>
+<td>UPDATE (whole)</td>
+<td>Replace entire profile</td>
+</tr>
+<tr>
+<td><strong>PATCH</strong></td>
+<td>Update</td>
+<td>UPDATE (partial)</td>
+<td>Change just the email</td>
+</tr>
+<tr>
+<td><strong>DELETE</strong></td>
+<td>Delete</td>
+<td>DELETE</td>
+<td>Remove a post</td>
+</tr>
+</tbody>
+</table>
+<h3 id="http-status-codes-the-servers-reply">HTTP Status Codes — The Server's Reply</h3>
+<p><strong>2xx — Success</strong>
+- <code>200 OK</code> — Request succeeded
+- <code>201 Created</code> — New resource created
+- <code>204 No Content</code> — Success, nothing to return</p>
+<p><strong>4xx — Client Error</strong>
+- <code>400 Bad Request</code> — Invalid data sent
+- <code>401 Unauthorized</code> — Not logged in
+- <code>403 Forbidden</code> — Logged in but no permission
+- <code>404 Not Found</code> — Resource doesn't exist
+- <code>429 Too Many Requests</code> — Rate limited</p>
+<p><strong>5xx — Server Error</strong>
+- <code>500 Internal Server Error</code> — Server crashed
+- <code>503 Service Unavailable</code> — Server overloaded</p>
+<h3 id="rest-api-design-principles">REST API Design Principles</h3>
+<ol>
+<li><strong>Stateless</strong> — Each request contains all needed information</li>
+<li><strong>Resource-based URLs</strong> — <code>/users/1/posts</code> not <code>/getUserPosts?id=1</code></li>
+<li><strong>Use HTTP verbs correctly</strong> — GET to read, POST to create</li>
+<li><strong>Consistent response format</strong> — Always return JSON with same structure</li>
+<li><strong>Version your API</strong> — <code>/v1/users</code> so old clients don't break</li>
+</ol>
+<hr />
+<h3 id="tv-remote-analogy">📺 TV Remote Analogy</h3>
+<p>Your TV remote is an API:
+- It defines <strong>what buttons you can press</strong> (available endpoints)
+- Each button does one specific thing (resource + method)
+- You don't know HOW the TV processes it internally
+- You just use the defined interface</p>
+<p>APIs work the same way. When you use Google Maps to get directions, you send a request to their API and get directions back — without knowing how their routing algorithm works internally.</p>
+<hr />
+<h2 id="key-concepts">🔑 Key Concepts</h2>
+<ul>
+<li><strong>REST API</strong></li>
+<li><strong>HTTP Methods</strong></li>
+<li><strong>Status Codes</strong></li>
+<li><strong>Endpoints</strong></li>
+<li><strong>Request Headers</strong></li>
+<li><strong>Response Body</strong></li>
+<li><strong>JSON</strong></li>
+<li><strong>API Versioning</strong></li>
+</ul>
+<hr />
+<h2 id="javascript-example">💛 JavaScript Example</h2>
+<pre><code class="language-javascript">// Complete CRUD REST API with Express.js
+const express = require('express');
+const app = express();
+app.use(express.json());
+
+// In-memory store with auto-increment IDs
+let posts = new Map();
+let nextId = 1;
+
+// Helper: standardised response format
+const success = (data, status = 200) =&gt; ({ success: true, data });
+const error = (msg, status = 400) =&gt; ({ success: false, error: msg });
+
+// GET /posts — list all (with optional search)
+app.get('/posts', (req, res) =&gt; {
+  const { author, page = 1, limit = 10 } = req.query;
+  let result = Array.from(posts.values());
+
+  if (author) result = result.filter(p =&gt; p.author === author);
+
+  // Pagination
+  const start = (page - 1) * limit;
+  const paginated = result.slice(start, start + parseInt(limit));
+
+  res.json({ success: true, data: paginated, total: result.length, page: +page });
+});
+
+// GET /posts/:id — get one post
+app.get('/posts/:id', (req, res) =&gt; {
+  const post = posts.get(parseInt(req.params.id));
+  if (!post) return res.status(404).json(error('Post not found'));
+  res.json(success(post));
+});
+
+// POST /posts — create new post
+app.post('/posts', (req, res) =&gt; {
+  const { title, body, author } = req.body;
+  if (!title) return res.status(400).json(error('Title is required'));
+  if (!author) return res.status(400).json(error('Author is required'));
+
+  const post = { id: nextId++, title, body: body || '', author, createdAt: new Date().toISOString() };
+  posts.set(post.id, post);
+  res.status(201).json(success(post));
+});
+
+// PATCH /posts/:id — partial update
+app.patch('/posts/:id', (req, res) =&gt; {
+  const id = parseInt(req.params.id);
+  if (!posts.has(id)) return res.status(404).json(error('Post not found'));
+
+  const post = posts.get(id);
+  const updated = { ...post, ...req.body, id, updatedAt: new Date().toISOString() };
+  posts.set(id, updated);
+  res.json(success(updated));
+});
+
+// DELETE /posts/:id
+app.delete('/posts/:id', (req, res) =&gt; {
+  const id = parseInt(req.params.id);
+  if (!posts.delete(id)) return res.status(404).json(error('Post not found'));
+  res.status(204).send(); // No content
+});
+
+app.listen(3000, () =&gt; console.log('🚀 Posts API running on :3000'));
+</code></pre>
+<hr />
+<h2 id="python-example">🐍 Python Example</h2>
+<pre><code class="language-python">from flask import Flask, jsonify, request
+from datetime import datetime
+from typing import Optional
+import math
+
+app = Flask(__name__)
+
+# Storage and auto-increment
+posts: dict = {}
+next_id: int = 1
+
+def success(data, status=200):
+    return jsonify({'success': True, 'data': data}), status
+
+def error(msg, status=400):
+    return jsonify({'success': False, 'error': msg}), status
+
+# GET /api/v1/posts — list with pagination + filter
+@app.route('/api/v1/posts', methods=['GET'])
+def list_posts():
+    author = request.args.get('author')
+    page   = int(request.args.get('page', 1))
+    limit  = int(request.args.get('limit', 10))
+
+    result = list(posts.values())
+    if author:
+        result = [p for p in result if p['author'] == author]
+
+    total_pages = math.ceil(len(result) / limit)
+    start = (page - 1) * limit
+    paginated = result[start: start + limit]
+
+    return jsonify({
+        'success': True, 'data': paginated,
+        'meta': {'total': len(result), 'page': page, 'total_pages': total_pages}
+    })
+
+# GET /api/v1/posts/&lt;id&gt;
+@app.route('/api/v1/posts/&lt;int:post_id&gt;', methods=['GET'])
+def get_post(post_id):
+    post = posts.get(post_id)
+    if not post:
+        return error(f'Post {post_id} not found', 404)
+    return success(post)
+
+# POST /api/v1/posts
+@app.route('/api/v1/posts', methods=['POST'])
+def create_post():
+    global next_id
+    data = request.json or {}
+    if not data.get('title'):
+        return error('title is required')
+    if not data.get('author'):
+        return error('author is required')
+
+    post = {
+        'id': next_id,
+        'title': data['title'],
+        'body': data.get('body', ''),
+        'author': data['author'],
+        'created_at': datetime.utcnow().isoformat()
+    }
+    posts[next_id] = post
+    next_id += 1
+    return success(post, 201)
+
+# PATCH /api/v1/posts/&lt;id&gt; — partial update
+@app.route('/api/v1/posts/&lt;int:post_id&gt;', methods=['PATCH'])
+def update_post(post_id):
+    if post_id not in posts:
+        return error(f'Post {post_id} not found', 404)
+    data = request.json or {}
+    posts[post_id].update({**data, 'updated_at': datetime.utcnow().isoformat()})
+    return success(posts[post_id])
+
+# DELETE /api/v1/posts/&lt;id&gt;
+@app.route('/api/v1/posts/&lt;int:post_id&gt;', methods=['DELETE'])
+def delete_post(post_id):
+    if post_id not in posts:
+        return error(f'Post {post_id} not found', 404)
+    del posts[post_id]
+    return jsonify({}), 204
+
+if __name__ == '__main__':
+    app.run(debug=True)
+</code></pre>
+<hr />
+<h2 id="homework">📝 Homework</h2>
+<ol>
+<li>Design REST API endpoints for a school management system (students, teachers, classes, grades)</li>
+<li>What status code would you return if a user tries to access another user's private data?</li>
+<li>Install Postman and test a public API like https://jsonplaceholder.typicode.com</li>
+<li>Research: What is the difference between REST and SOAP? Why did REST win?</li>
+</ol>
+<hr />
+<h2 id="resources">📚 Resources</h2>
+<ul>
+<li>REST API Design Best Practices — restfulapi.net</li>
+<li>HTTP Status Codes Reference — httpstatuses.com</li>
+<li>Postman Learning Center — learning.postman.com</li>
+<li>OpenAPI Specification — swagger.io/specification</li>
+</ul>
+<hr />
+<p><em>← <a href="../day_02/">Day 02</a> | <a href="../">Index</a> | <a href="../day_04/">Day 04</a> →</em></p></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js"></script>
+        <script src="../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
