@@ -1,0 +1,2007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Design in 30 Days</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c14;
+    --surface: #0e1420;
+    --card: #121926;
+    --border: #1e2d42;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --accent3: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --week1: #00d4ff;
+    --week2: #7c3aed;
+    --week3: #f59e0b;
+    --week4: #10b981;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID BG */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HERO */
+  .hero {
+    padding: 60px 0 40px;
+    text-align: center;
+    position: relative;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(0,212,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.3);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    animation: fadeDown 0.6s ease;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 6vw, 72px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    animation: fadeDown 0.6s ease 0.1s both;
+  }
+
+  h1 span {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-sub {
+    color: var(--muted);
+    font-size: 16px;
+    margin-top: 16px;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+    animation: fadeDown 0.6s ease 0.2s both;
+  }
+
+  .stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 36px;
+    flex-wrap: wrap;
+    animation: fadeDown 0.6s ease 0.3s both;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* WEEK LEGEND */
+  .week-legend {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 40px 0 20px;
+    animation: fadeUp 0.6s ease 0.4s both;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  /* PROGRESS BAR */
+  .progress-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 24px;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    animation: fadeUp 0.5s ease 0.5s both;
+  }
+
+  .progress-label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .progress-bar { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; transition: width 0.5s ease; width: 0%; }
+  .progress-count { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent); white-space: nowrap; }
+
+  /* WEEK SECTION */
+  .week-section { margin-bottom: 48px; }
+
+  .week-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .week-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .week-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  .week-days-count {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* DAY CARD */
+  .days-grid {
+    display: grid;
+    gap: 10px;
+  }
+
+  .day-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .day-card:hover {
+    transform: translateY(-1px);
+  }
+
+  .day-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+  }
+
+  .day-header:hover { background: rgba(255,255,255,0.02); }
+
+  .day-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    min-width: 44px;
+    letter-spacing: 1px;
+  }
+
+  .day-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 10px;
+  }
+
+  .day-checkbox.done {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+
+  .day-title-wrap { flex: 1 }
+
+  .day-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .day-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .tag-row { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+
+  .tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+  }
+
+  .tag-theory { background: rgba(124,58,237,0.15); color: #a78bfa; border: 1px solid rgba(124,58,237,0.3); }
+  .tag-js { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+  .tag-py { background: rgba(16,185,129,0.12); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+  .tag-project { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+
+  .chevron {
+    color: var(--muted);
+    font-size: 14px;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+  }
+
+  .day-card.open .chevron { transform: rotate(180deg); }
+
+  /* DAY BODY */
+  .day-body {
+    display: none;
+    padding: 0 20px 20px;
+    border-top: 1px solid var(--border);
+    margin-top: 0;
+  }
+
+  .day-card.open .day-body { display: block; }
+
+  .section-label {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 18px 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .theory-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #94a3b8;
+  }
+
+  .theory-text strong { color: var(--text); }
+
+  .analogy-box {
+    background: rgba(0,212,255,0.05);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+
+  .analogy-box b { color: var(--accent); }
+
+  .code-block {
+    background: #080c14;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 10px 0;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-lang {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .lang-js { color: #fbbf24; }
+  .lang-py { color: #34d399; }
+
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.2s;
+  }
+
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  pre {
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #e2e8f0;
+  }
+
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+  .str { color: #c3e88d; }
+  .num { color: #f78c6c; }
+  .cm { color: #546e7a; font-style: italic; }
+  .cls { color: #ffcb6b; }
+
+  /* KEY CONCEPTS */
+  .concepts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    margin: 10px 0;
+  }
+
+  .concept-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .concept-icon { font-size: 16px; margin-bottom: 4px; }
+  .concept-name { font-weight: 500; }
+  .concept-desc { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* SCROLL TO TOP */
+  .scroll-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .scroll-top.visible { opacity: 1; pointer-events: auto; }
+  .scroll-top:hover { border-color: var(--accent); color: var(--accent); }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  footer {
+    text-align: center;
+    padding: 48px 0 32px;
+    color: var(--muted);
+    font-size: 13px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+  }
+
+  @media (max-width: 600px) {
+    .stats-row { gap: 20px; }
+    .day-title { font-size: 14px; }
+    pre { font-size: 11px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- HERO -->
+  <div class="hero">
+    <div class="badge">⚡ 30-Day Curriculum</div>
+    <h1>System Design<br><span>From Scratch</span></h1>
+    <p class="hero-sub">Built for beginners. Explained like you're in 10th grade. Coded in JavaScript & Python.</p>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num">30</div><div class="stat-label">Days</div></div>
+      <div class="stat"><div class="stat-num">4</div><div class="stat-label">Weeks</div></div>
+      <div class="stat"><div class="stat-num">60+</div><div class="stat-label">Code Examples</div></div>
+      <div class="stat"><div class="stat-num">0</div><div class="stat-label">Prerequisites</div></div>
+    </div>
+  </div>
+
+  <!-- WEEK LEGEND -->
+  <div class="week-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#00d4ff"></div>Week 1 — Foundations</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#7c3aed"></div>Week 2 — Core Concepts</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>Week 3 — Advanced Topics</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Week 4 — Design Practice</div>
+  </div>
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap">
+    <span class="progress-label">Your Progress</span>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="progress-count" id="progressCount">0 / 30</span>
+  </div>
+
+  <!-- ===== WEEK 1 ===== -->
+  <div class="week-section">
+    <div class="week-header">
+      <span class="week-tag" style="background:rgba(0,212,255,0.1);color:#00d4ff;border:1px solid rgba(0,212,255,0.3)">Week 01</span>
+      <span class="week-title">The Foundations</span>
+      <span class="week-days-count">Days 01–07</span>
+    </div>
+    <div class="days-grid">
+
+      <!-- DAY 1 -->
+      <div class="day-card" data-day="1">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 01</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,1)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">What is System Design?</div>
+            <div class="day-subtitle">The big picture — why systems break and how to plan them</div>
+            <div class="tag-row">
+              <span class="tag tag-theory">Theory</span>
+            </div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            <strong>System Design</strong> is the process of planning how a software application will work at a large scale — handling millions of users, storing huge amounts of data, and staying fast and reliable.<br><br>
+            Think of it like designing a city. A small village doesn't need traffic lights or highways. But a big city needs roads, bridges, water systems, electricity grids — all working together. Software is the same. A simple app for 10 friends is easy. But building <strong>Instagram, YouTube, or WhatsApp</strong> for billions of people needs careful planning.<br><br>
+            <strong>Key questions System Design answers:</strong><br>
+            — How do we store millions of user photos?<br>
+            — How do we handle 100,000 users at the same time?<br>
+            — What happens when one server crashes?<br>
+            — How do we make the app fast for users in different countries?
+          </div>
+          <div class="analogy-box">
+            <b>🏫 Real-world analogy:</b> Your school canteen works great for 200 students. But imagine feeding 200,000 students. You'd need multiple food stalls, separate queues, backup cooks, and a storage room. That's system design — planning for scale.
+          </div>
+          <div class="concepts-grid">
+            <div class="concept-item"><div class="concept-icon">⚡</div><div class="concept-name">Scalability</div><div class="concept-desc">Handle more users</div></div>
+            <div class="concept-item"><div class="concept-icon">🛡️</div><div class="concept-name">Reliability</div><div class="concept-desc">Stay up always</div></div>
+            <div class="concept-item"><div class="concept-icon">🚀</div><div class="concept-name">Performance</div><div class="concept-desc">Be fast</div></div>
+            <div class="concept-item"><div class="concept-icon">🔧</div><div class="concept-name">Maintainability</div><div class="concept-desc">Easy to fix</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 2 -->
+      <div class="day-card" data-day="2">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 02</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,2)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Client-Server Architecture</div>
+            <div class="day-subtitle">How your browser talks to the internet</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-js">JavaScript</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            Every app you use has two parts: the <strong>Client</strong> (your device — phone, laptop) and the <strong>Server</strong> (a powerful computer far away that stores and processes data).<br><br>
+            When you open YouTube: 1) Your browser (client) sends a request: <em>"Give me the homepage"</em>. 2) YouTube's server receives it. 3) The server finds the videos and sends them back. 4) Your browser displays them. This is called the <strong>Request-Response cycle</strong>.
+          </div>
+          <div class="analogy-box">
+            <b>🍕 Pizza analogy:</b> You (client) call a pizza shop (server) and order a pizza. The shop makes it and delivers it. You didn't bake it — you just asked for it. That's client-server!
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — Making a Request</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="cm">// Client asks server for user data</span>
+<span class="kw">async function</span> <span class="fn">getUserData</span>() {
+  <span class="kw">const</span> response = <span class="kw">await</span> fetch(<span class="str">'https://api.example.com/user/1'</span>);
+  <span class="kw">const</span> data = <span class="kw">await</span> response.json();
+  console.log(<span class="str">'User received:'</span>, data.name);
+}
+
+<span class="fn">getUserData</span>();
+<span class="cm">// Output: User received: Arjun</span></pre>
+          </div>
+          <div class="section-label">🐍 Python Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-py">Python — Simple Server with Flask</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">from</span> flask <span class="kw">import</span> Flask, jsonify
+
+app = Flask(__name__)
+
+<span class="cm"># This is the server waiting for requests</span>
+<span class="kw">@</span>app.route(<span class="str">'/user/1'</span>)
+<span class="kw">def</span> <span class="fn">get_user</span>():
+    <span class="kw">return</span> jsonify({<span class="str">'name'</span>: <span class="str">'Arjun'</span>, <span class="str">'age'</span>: <span class="num">15</span>})
+
+<span class="kw">if</span> __name__ == <span class="str">'__main__'</span>:
+    app.run()  <span class="cm"># Server starts listening!</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 3 -->
+      <div class="day-card" data-day="3">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 03</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,3)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">APIs & HTTP</div>
+            <div class="day-subtitle">The universal language between systems</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-js">JavaScript</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            An <strong>API (Application Programming Interface)</strong> is a set of rules that lets two systems talk to each other. <strong>HTTP</strong> is the most common protocol (set of rules) for sending data on the internet.<br><br>
+            <strong>HTTP Methods:</strong><br>
+            — <strong>GET</strong> — Fetch data (read a post)<br>
+            — <strong>POST</strong> — Send new data (create a post)<br>
+            — <strong>PUT</strong> — Update existing data<br>
+            — <strong>DELETE</strong> — Remove data<br><br>
+            <strong>Status Codes:</strong> 200 = OK ✅ | 404 = Not Found ❌ | 500 = Server Error 💥
+          </div>
+          <div class="analogy-box">
+            <b>📱 TV Remote analogy:</b> Your TV remote is an API. You press "Volume Up" and the TV increases volume. You don't know HOW it works inside — you just use the defined buttons. APIs are the same: defined buttons for software.
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — REST API Calls</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="cm">// GET — Read data</span>
+<span class="kw">const</span> post = <span class="kw">await</span> fetch(<span class="str">'/api/posts/1'</span>);
+
+<span class="cm">// POST — Create new data</span>
+<span class="kw">await</span> fetch(<span class="str">'/api/posts'</span>, {
+  method: <span class="str">'POST'</span>,
+  headers: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+  body: JSON.stringify({ title: <span class="str">'My First Post'</span> })
+});
+
+<span class="cm">// DELETE — Remove data</span>
+<span class="kw">await</span> fetch(<span class="str">'/api/posts/1'</span>, { method: <span class="str">'DELETE'</span> });</pre>
+          </div>
+          <div class="section-label">🐍 Python Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-py">Python — REST API with Flask</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">from</span> flask <span class="kw">import</span> Flask, request, jsonify
+
+app = Flask(__name__)
+posts = {}
+
+<span class="kw">@</span>app.route(<span class="str">'/posts'</span>, methods=[<span class="str">'GET'</span>])
+<span class="kw">def</span> <span class="fn">get_posts</span>(): <span class="kw">return</span> jsonify(posts)
+
+<span class="kw">@</span>app.route(<span class="str">'/posts'</span>, methods=[<span class="str">'POST'</span>])
+<span class="kw">def</span> <span class="fn">create_post</span>():
+    data = request.json
+    posts[<span class="num">len</span>(posts)+<span class="num">1</span>] = data[<span class="str">'title'</span>]
+    <span class="kw">return</span> jsonify({<span class="str">'status'</span>: <span class="str">'created'</span>}), <span class="num">201</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 4 -->
+      <div class="day-card" data-day="4">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 04</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,4)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Databases — SQL (Relational)</div>
+            <div class="day-subtitle">Storing data in structured tables</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            A <strong>database</strong> is where your app stores data permanently. <strong>SQL databases</strong> store data in <strong>tables</strong> (like spreadsheets) with rows and columns. Examples: MySQL, PostgreSQL, SQLite.<br><br>
+            Think of a school database: a <em>Students</em> table has columns (Name, Age, Grade) and each student is a row. Tables can be <strong>related</strong> — a Students table can link to a Grades table via a student ID.
+          </div>
+          <div class="analogy-box">
+            <b>📊 Excel analogy:</b> A SQL database is like a super-powered Excel. Multiple sheets (tables) that can reference each other, with millions of rows and instant search.
+          </div>
+          <div class="section-label">🐍 Python Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-py">Python — SQLite Database</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">import</span> sqlite3
+
+conn = sqlite3.connect(<span class="str">'school.db'</span>)
+cursor = conn.cursor()
+
+<span class="cm"># Create a table (like making a spreadsheet)</span>
+cursor.execute(<span class="str">'''CREATE TABLE students
+    (id INTEGER PRIMARY KEY, name TEXT, grade INTEGER)'''</span>)
+
+<span class="cm"># Insert a student (add a row)</span>
+cursor.execute(<span class="str">"INSERT INTO students VALUES (1, 'Priya', 10)"</span>)
+
+<span class="cm"># Read data (fetch rows)</span>
+cursor.execute(<span class="str">"SELECT * FROM students WHERE grade = 10"</span>)
+<span class="kw">print</span>(cursor.fetchall())  <span class="cm"># [(1, 'Priya', 10)]</span>
+
+conn.commit()
+conn.close()</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 5 -->
+      <div class="day-card" data-day="5">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 05</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,5)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Databases — NoSQL</div>
+            <div class="day-subtitle">Flexible storage for modern apps</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-js">JavaScript</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            <strong>NoSQL databases</strong> don't use tables. Instead, they store data as <strong>documents</strong> (like JSON objects), key-value pairs, graphs, or columns. Examples: MongoDB, Redis, DynamoDB.<br><br>
+            <strong>When to use NoSQL:</strong><br>
+            — Data structure changes often (flexible schema)<br>
+            — Need to store huge amounts of unstructured data<br>
+            — Need very fast reads/writes<br><br>
+            <strong>SQL vs NoSQL:</strong> SQL = rigid structure, great for relationships. NoSQL = flexible, great for scale.
+          </div>
+          <div class="analogy-box">
+            <b>📦 Box analogy:</b> SQL is like filing cabinets — everything has a strict folder structure. NoSQL is like a big box where you can throw in anything in any shape. More flexible, but harder to organize perfectly.
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — MongoDB Style</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="cm">// NoSQL document — no fixed columns!</span>
+<span class="kw">const</span> user = {
+  _id: <span class="str">'user_001'</span>,
+  name: <span class="str">'Arjun'</span>,
+  hobbies: [<span class="str">'coding'</span>, <span class="str">'cricket'</span>],
+  address: { city: <span class="str">'Chennai'</span>, zip: <span class="str">'600001'</span> }
+};
+
+<span class="cm">// Insert into MongoDB collection</span>
+<span class="kw">await</span> db.collection(<span class="str">'users'</span>).insertOne(user);
+
+<span class="cm">// Find users from Chennai</span>
+<span class="kw">const</span> result = <span class="kw">await</span> db.collection(<span class="str">'users'</span>)
+  .find({ <span class="str">'address.city'</span>: <span class="str">'Chennai'</span> }).toArray();</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 6 -->
+      <div class="day-card" data-day="6">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 06</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,6)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Caching — Speed Up Everything</div>
+            <div class="day-subtitle">Don't compute the same thing twice</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-js">JavaScript</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            <strong>Caching</strong> means saving the result of an expensive operation so you can reuse it quickly next time, instead of computing it again.<br><br>
+            Every time someone searches "funny cat videos" on YouTube, should YouTube search all 800 million videos? No! It caches the top results. The next 1000 people get the same answer instantly from the cache.<br><br>
+            <strong>Cache Hit</strong> = found in cache (fast ⚡). <strong>Cache Miss</strong> = not in cache, must fetch from database (slow 🐢).
+          </div>
+          <div class="analogy-box">
+            <b>🧠 Memory analogy:</b> Your brain caches your home address. You don't look it up on Google every time — you already know it. Software caches work the same way.
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — Simple In-Memory Cache</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">const</span> cache = <span class="kw">new</span> <span class="cls">Map</span>();
+
+<span class="kw">async function</span> <span class="fn">getUser</span>(id) {
+  <span class="kw">if</span> (cache.has(id)) {
+    console.log(<span class="str">'⚡ Cache HIT — returning fast!'</span>);
+    <span class="kw">return</span> cache.get(id);
+  }
+  <span class="cm">// Slow DB call (first time only)</span>
+  console.log(<span class="str">'🐢 Cache MISS — fetching from DB'</span>);
+  <span class="kw">const</span> user = <span class="kw">await</span> <span class="fn">fetchFromDB</span>(id);
+  cache.set(id, user);
+  <span class="kw">return</span> user;
+}</pre>
+          </div>
+          <div class="section-label">🐍 Python Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-py">Python — functools Cache</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">from</span> functools <span class="kw">import</span> lru_cache
+
+<span class="cm"># @lru_cache saves previous results automatically!</span>
+<span class="kw">@</span>lru_cache(maxsize=<span class="num">100</span>)
+<span class="kw">def</span> <span class="fn">get_user_score</span>(user_id):
+    <span class="kw">print</span>(<span class="str">f"Computing score for {user_id}..."</span>)
+    <span class="kw">return</span> user_id * <span class="num">42</span>  <span class="cm"># Expensive computation</span>
+
+<span class="fn">get_user_score</span>(<span class="num">5</span>)  <span class="cm"># Computes: "Computing score for 5..."</span>
+<span class="fn">get_user_score</span>(<span class="num">5</span>)  <span class="cm"># Instant! Returns from cache</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 7 -->
+      <div class="day-card" data-day="7">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 07</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,7)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Week 1 Mini Project — Build a URL Tracker</div>
+            <div class="day-subtitle">Apply everything: server, API, DB, and cache</div>
+            <div class="tag-row"><span class="tag tag-project">Mini Project</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">🎯 Project Goal</div>
+          <div class="theory-text">
+            Build a simple URL visit tracker using everything from Week 1. A user visits a URL → the server logs it → we cache counts → we read from a database.
+          </div>
+          <div class="section-label">🐍 Python Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-py">Python — URL Tracker App</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">from</span> flask <span class="kw">import</span> Flask, jsonify
+<span class="kw">import</span> sqlite3
+
+app = Flask(__name__)
+cache = {}
+
+<span class="kw">def</span> <span class="fn">get_db</span>():
+    conn = sqlite3.connect(<span class="str">'tracker.db'</span>)
+    conn.execute(<span class="str">'''CREATE TABLE IF NOT EXISTS visits
+        (url TEXT PRIMARY KEY, count INTEGER DEFAULT 0)'''</span>)
+    <span class="kw">return</span> conn
+
+<span class="kw">@</span>app.route(<span class="str">'/visit/&lt;path:url&gt;'</span>)
+<span class="kw">def</span> <span class="fn">track_visit</span>(url):
+    db = <span class="fn">get_db</span>()
+    db.execute(<span class="str">'''INSERT INTO visits(url, count) VALUES(?,1)
+        ON CONFLICT(url) DO UPDATE SET count=count+1'''</span>, [url])
+    db.commit()
+    cache[url] = cache.get(url, <span class="num">0</span>) + <span class="num">1</span>  <span class="cm"># Update cache</span>
+    <span class="kw">return</span> jsonify({<span class="str">'url'</span>: url, <span class="str">'visits'</span>: cache[url]})</pre>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== WEEK 2 ===== -->
+  <div class="week-section">
+    <div class="week-header">
+      <span class="week-tag" style="background:rgba(124,58,237,0.1);color:#a78bfa;border:1px solid rgba(124,58,237,0.3)">Week 02</span>
+      <span class="week-title">Core Concepts</span>
+      <span class="week-days-count">Days 08–14</span>
+    </div>
+    <div class="days-grid">
+
+      <!-- DAY 8 -->
+      <div class="day-card" data-day="8">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 08</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,8)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Load Balancing</div>
+            <div class="day-subtitle">Distribute traffic so no single server breaks</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-js">JavaScript</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            A <strong>Load Balancer</strong> sits in front of multiple servers and distributes incoming requests so no single server gets overwhelmed. If one server dies, the load balancer routes traffic to others automatically.<br><br>
+            <strong>Strategies:</strong><br>
+            — <strong>Round Robin</strong>: Request 1 → Server A, Request 2 → Server B, Request 3 → Server C, repeat<br>
+            — <strong>Least Connections</strong>: Send to whichever server has fewest active connections<br>
+            — <strong>IP Hash</strong>: Same user always goes to same server
+          </div>
+          <div class="analogy-box">
+            <b>🏦 Bank analogy:</b> A bank has 5 counters. A manager (load balancer) directs each customer to the counter with the shortest queue. No one counter gets stuck with 100 people.
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — Round Robin Load Balancer</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">const</span> servers = [<span class="str">'Server-A'</span>, <span class="str">'Server-B'</span>, <span class="str">'Server-C'</span>];
+<span class="kw">let</span> current = <span class="num">0</span>;
+
+<span class="kw">function</span> <span class="fn">getNextServer</span>() {
+  <span class="kw">const</span> server = servers[current % servers.length];
+  current++;
+  <span class="kw">return</span> server;
+}
+
+<span class="cm">// Simulate 6 incoming requests</span>
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">1</span>; i <= <span class="num">6</span>; i++) {
+  console.log(<span class="str">`Request ${i} → ${getNextServer()}`</span>);
+}
+<span class="cm">// Request 1 → Server-A</span>
+<span class="cm">// Request 2 → Server-B</span>
+<span class="cm">// Request 3 → Server-C</span>
+<span class="cm">// Request 4 → Server-A (repeats!)</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 9 -->
+      <div class="day-card" data-day="9">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 09</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,9)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Horizontal vs Vertical Scaling</div>
+            <div class="day-subtitle">Growing your system the smart way</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            When your app gets popular, you need to handle more users. Two ways to scale:<br><br>
+            <strong>Vertical Scaling (Scale Up)</strong>: Make your single server more powerful. Add more RAM, faster CPU. Like upgrading from a bicycle to a motorbike. <em>Limit: there's a max size for one machine.</em><br><br>
+            <strong>Horizontal Scaling (Scale Out)</strong>: Add more servers. Like adding more bicycles. Netflix uses horizontal scaling — thousands of small servers rather than one giant one.
+          </div>
+          <div class="analogy-box">
+            <b>🚗 Road analogy:</b> Traffic is heavy. Vertical = build a bigger lane on one road. Horizontal = build more roads. More roads (horizontal) scales infinitely.
+          </div>
+          <div class="concepts-grid">
+            <div class="concept-item"><div class="concept-icon">⬆️</div><div class="concept-name">Vertical</div><div class="concept-desc">Bigger machine, limited ceiling</div></div>
+            <div class="concept-item"><div class="concept-icon">➡️</div><div class="concept-name">Horizontal</div><div class="concept-desc">More machines, unlimited scale</div></div>
+            <div class="concept-item"><div class="concept-icon">⚖️</div><div class="concept-name">Trade-off</div><div class="concept-desc">Cost vs. complexity</div></div>
+            <div class="concept-item"><div class="concept-icon">☁️</div><div class="concept-name">Auto-Scale</div><div class="concept-desc">Cloud adds servers automatically</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 10 -->
+      <div class="day-card" data-day="10">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 10</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,10)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">CDN — Content Delivery Networks</div>
+            <div class="day-subtitle">Serving content from the nearest location</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-js">JavaScript</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            A <strong>CDN</strong> is a network of servers spread around the world that store copies of your website's files (images, videos, CSS). When a user requests a file, it's served from the <strong>nearest server</strong>, not from one far away.<br><br>
+            Without CDN: A user in Mumbai requesting a file from a server in New York = high latency (200ms).<br>
+            With CDN: Same user gets the file from a server in Mumbai = very low latency (5ms). ⚡
+          </div>
+          <div class="analogy-box">
+            <b>🏪 Warehouse analogy:</b> Amazon has warehouses all over India. When you order, they ship from the closest warehouse — not always from one central location. CDNs are digital warehouses.
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — Using CDN Links</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="cm">// Instead of hosting React yourself...</span>
+<span class="cm">// Use a CDN — served from nearest server globally!</span>
+
+<span class="cm">// In your HTML:</span>
+<span class="cm">// &lt;script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.min.js"&gt;</span>
+
+<span class="cm">// Your own images can be uploaded to a CDN</span>
+<span class="kw">const</span> imageUrl = <span class="str">'https://cdn.yoursite.com/images/hero.jpg'</span>;
+<span class="cm">// This file is stored in 200+ locations worldwide</span>
+<span class="cm">// User gets it from the closest one automatically ✅</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 11 -->
+      <div class="day-card" data-day="11">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 11</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,11)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Message Queues</div>
+            <div class="day-subtitle">Async communication between services</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-js">JavaScript</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            A <strong>Message Queue</strong> lets services communicate by passing messages without waiting for each other. Service A puts a message in the queue. Service B picks it up when ready. They're decoupled — they don't need to run at the same speed.<br><br>
+            Example: When you order food on Swiggy, your phone doesn't wait for the restaurant to confirm before showing "Order Placed." The confirmation goes through a queue and reaches you later.
+          </div>
+          <div class="analogy-box">
+            <b>📬 Mailbox analogy:</b> You drop a letter in a mailbox. You don't wait there until the postman collects it. The postman collects it when ready and delivers it. The mailbox is the queue.
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — Simple Queue Simulation</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">class</span> <span class="cls">MessageQueue</span> {
+  <span class="fn">constructor</span>() { <span class="kw">this</span>.queue = []; }
+
+  <span class="fn">publish</span>(msg) {
+    <span class="kw">this</span>.queue.push(msg);
+    console.log(<span class="str">`📤 Published: ${msg.type}`</span>);
+  }
+
+  <span class="fn">consume</span>() {
+    <span class="kw">if</span> (<span class="kw">this</span>.queue.length === <span class="num">0</span>) <span class="kw">return null</span>;
+    <span class="kw">const</span> msg = <span class="kw">this</span>.queue.shift();
+    console.log(<span class="str">`📥 Processing: ${msg.type}`</span>);
+    <span class="kw">return</span> msg;
+  }
+}
+
+<span class="kw">const</span> mq = <span class="kw">new</span> <span class="cls">MessageQueue</span>();
+mq.publish({ type: <span class="str">'ORDER_PLACED'</span>, orderId: <span class="num">42</span> });
+mq.publish({ type: <span class="str">'SEND_EMAIL'</span>, to: <span class="str">'user@mail.com'</span> });
+mq.consume(); <span class="cm">// Processes ORDER_PLACED</span>
+mq.consume(); <span class="cm">// Processes SEND_EMAIL</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 12 -->
+      <div class="day-card" data-day="12">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 12</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,12)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Microservices vs Monolith</div>
+            <div class="day-subtitle">One big app or many small ones?</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            <strong>Monolith:</strong> One big application where all features (login, payments, search) are in a single codebase. Easy to start, hard to scale.<br><br>
+            <strong>Microservices:</strong> Split the app into many small, independent services. Each service handles one feature: User Service, Payment Service, Search Service. They talk to each other via APIs.<br><br>
+            <strong>Amazon's journey:</strong> Started as a monolith → split into 100s of microservices as they grew.
+          </div>
+          <div class="analogy-box">
+            <b>🍽️ Restaurant analogy:</b> A monolith is one chef who cooks everything. Microservices is a restaurant with separate chefs for starters, mains, desserts — each expert in one thing.
+          </div>
+          <div class="concepts-grid">
+            <div class="concept-item"><div class="concept-icon">🏗️</div><div class="concept-name">Monolith</div><div class="concept-desc">Simple to start, hard to scale</div></div>
+            <div class="concept-item"><div class="concept-icon">🔧</div><div class="concept-name">Microservices</div><div class="concept-desc">Complex but scales well</div></div>
+            <div class="concept-item"><div class="concept-icon">🚀</div><div class="concept-name">Deploy</div><div class="concept-desc">Deploy each service independently</div></div>
+            <div class="concept-item"><div class="concept-icon">🐛</div><div class="concept-name">Failure</div><div class="concept-desc">One failure doesn't crash all</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 13 -->
+      <div class="day-card" data-day="13">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 13</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,13)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">DNS & How the Internet Works</div>
+            <div class="day-subtitle">Turning google.com into an IP address</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            <strong>DNS (Domain Name System)</strong> is the internet's phone book. When you type <em>google.com</em>, DNS translates it to an IP address like <em>142.250.195.46</em> — the actual address of Google's server.<br><br>
+            <strong>Journey of a request:</strong><br>
+            1) You type google.com → 2) Browser checks local cache → 3) Asks DNS server → 4) Gets IP address → 5) Connects to Google's server → 6) Page loads.
+          </div>
+          <div class="analogy-box">
+            <b>📞 Contacts analogy:</b> You saved "Mom" in your phone. When you call "Mom," your phone looks up her number. DNS does this for websites — translates names to numbers.
+          </div>
+          <div class="section-label">🐍 Python Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-py">Python — DNS Lookup</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">import</span> socket
+
+<span class="cm"># DNS lookup — convert domain to IP</span>
+<span class="kw">def</span> <span class="fn">dns_lookup</span>(domain):
+    ip = socket.gethostbyname(domain)
+    <span class="kw">print</span>(<span class="str">f"{domain} → {ip}"</span>)
+    <span class="kw">return</span> ip
+
+<span class="fn">dns_lookup</span>(<span class="str">'google.com'</span>)    <span class="cm"># google.com → 142.250.195.46</span>
+<span class="fn">dns_lookup</span>(<span class="str">'github.com'</span>)    <span class="cm"># github.com → 140.82.114.3</span>
+<span class="fn">dns_lookup</span>(<span class="str">'youtube.com'</span>)   <span class="cm"># youtube.com → 142.250.182.46</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 14 -->
+      <div class="day-card" data-day="14">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 14</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,14)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Week 2 Project — Build a Load Balancer</div>
+            <div class="day-subtitle">Simulate a multi-server routing system</div>
+            <div class="tag-row"><span class="tag tag-project">Mini Project</span><span class="tag tag-js">JavaScript</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">🎯 Project</div>
+          <div class="theory-text">Build a simulated load balancer that routes requests to servers using multiple strategies and tracks server health.</div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — Smart Load Balancer</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">class</span> <span class="cls">LoadBalancer</span> {
+  <span class="fn">constructor</span>(servers) {
+    <span class="kw">this</span>.servers = servers.map(s => ({
+      name: s, healthy: <span class="kw">true</span>, connections: <span class="num">0</span>
+    }));
+    <span class="kw">this</span>.index = <span class="num">0</span>;
+  }
+
+  <span class="fn">getServer</span>(strategy = <span class="str">'round-robin'</span>) {
+    <span class="kw">const</span> healthy = <span class="kw">this</span>.servers.filter(s => s.healthy);
+    <span class="kw">if</span> (strategy === <span class="str">'round-robin'</span>) {
+      <span class="kw">return</span> healthy[<span class="kw">this</span>.index++ % healthy.length];
+    }
+    <span class="kw">if</span> (strategy === <span class="str">'least-conn'</span>) {
+      <span class="kw">return</span> healthy.reduce((a,b) =>
+        a.connections < b.connections ? a : b);
+    }
+  }
+}
+
+<span class="kw">const</span> lb = <span class="kw">new</span> <span class="cls">LoadBalancer</span>([<span class="str">'A'</span>,<span class="str">'B'</span>,<span class="str">'C'</span>]);
+console.log(lb.getServer().name); <span class="cm">// A</span>
+console.log(lb.getServer().name); <span class="cm">// B</span>
+console.log(lb.getServer().name); <span class="cm">// C</span></pre>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== WEEK 3 ===== -->
+  <div class="week-section">
+    <div class="week-header">
+      <span class="week-tag" style="background:rgba(245,158,11,0.1);color:#fbbf24;border:1px solid rgba(245,158,11,0.3)">Week 03</span>
+      <span class="week-title">Advanced Topics</span>
+      <span class="week-days-count">Days 15–21</span>
+    </div>
+    <div class="days-grid">
+
+      <!-- DAY 15 -->
+      <div class="day-card" data-day="15">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 15</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,15)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">CAP Theorem</div>
+            <div class="day-subtitle">The impossible triangle of distributed systems</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            The <strong>CAP Theorem</strong> says a distributed database can only guarantee <strong>2 out of 3</strong> properties at the same time:<br><br>
+            <strong>C — Consistency:</strong> Every read gets the most recent write. All nodes see the same data at the same time.<br>
+            <strong>A — Availability:</strong> Every request gets a response (even if it's not the latest data).<br>
+            <strong>P — Partition Tolerance:</strong> The system works even if some servers can't communicate.<br><br>
+            Since network failures (partitions) always happen, you really choose between <strong>CP</strong> (consistent but sometimes unavailable) or <strong>AP</strong> (always available but sometimes stale data).
+          </div>
+          <div class="analogy-box">
+            <b>📚 Classroom analogy:</b> Teacher writes new notes on the board (Consistency). Students can always read notes (Availability). Even if some students are absent (Partition), class continues. You can't guarantee all three perfectly at once.
+          </div>
+          <div class="concepts-grid">
+            <div class="concept-item"><div class="concept-icon">🔄</div><div class="concept-name">Consistency</div><div class="concept-desc">Same data everywhere</div></div>
+            <div class="concept-item"><div class="concept-icon">✅</div><div class="concept-name">Availability</div><div class="concept-desc">Always responds</div></div>
+            <div class="concept-item"><div class="concept-icon">🌐</div><div class="concept-name">Partition</div><div class="concept-desc">Handles network splits</div></div>
+            <div class="concept-item"><div class="concept-icon">⚠️</div><div class="concept-name">Pick 2</div><div class="concept-desc">Can't have all three</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 16 -->
+      <div class="day-card" data-day="16">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 16</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,16)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Database Replication</div>
+            <div class="day-subtitle">Copies everywhere for speed & reliability</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            <strong>Replication</strong> means keeping copies of your database on multiple servers. If one fails, others take over. Also speeds up reads by letting users read from the nearest copy.<br><br>
+            <strong>Master-Slave:</strong> One master handles all writes. Multiple slaves get copies and handle reads. Most read-heavy apps (news sites, social media) use this.<br><br>
+            <strong>Multi-Master:</strong> Multiple nodes can handle writes. More complex, but highly available.
+          </div>
+          <div class="section-label">🐍 Python Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-py">Python — Replica Routing</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">import</span> random
+
+<span class="kw">class</span> <span class="cls">DatabaseCluster</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.master = <span class="str">"Master-DB"</span>
+        self.replicas = [<span class="str">"Replica-1"</span>, <span class="str">"Replica-2"</span>, <span class="str">"Replica-3"</span>]
+
+    <span class="kw">def</span> <span class="fn">write</span>(self, data):
+        <span class="cm"># Always write to master</span>
+        <span class="kw">print</span>(<span class="str">f"✍️  Writing to {self.master}: {data}"</span>)
+
+    <span class="kw">def</span> <span class="fn">read</span>(self):
+        <span class="cm"># Distribute reads across replicas</span>
+        db = random.choice(self.replicas)
+        <span class="kw">print</span>(<span class="str">f"📖 Reading from {db}"</span>)
+
+cluster = <span class="cls">DatabaseCluster</span>()
+cluster.write(<span class="str">"new post"</span>)  <span class="cm"># ✍️ Master</span>
+cluster.read()             <span class="cm"># 📖 Random replica</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 17 -->
+      <div class="day-card" data-day="17">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 17</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,17)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Database Sharding</div>
+            <div class="day-subtitle">Split your database into horizontal pieces</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-js">JavaScript</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            <strong>Sharding</strong> splits a large database into smaller pieces called <strong>shards</strong>, each stored on a different server. Instead of one giant table with 1 billion users, you split them: Users 1-333M on Shard 1, Users 333M-666M on Shard 2, Users 666M-1B on Shard 3.<br><br>
+            <strong>Sharding strategies:</strong><br>
+            — <strong>Range-based</strong>: Split by value ranges (A-M on Shard 1, N-Z on Shard 2)<br>
+            — <strong>Hash-based</strong>: Apply a hash function to distribute evenly<br>
+            — <strong>Geographic</strong>: Users in India → India DB, Users in US → US DB
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — Hash Sharding</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">const</span> NUM_SHARDS = <span class="num">3</span>;
+
+<span class="kw">function</span> <span class="fn">getShard</span>(userId) {
+  <span class="kw">return</span> userId % NUM_SHARDS; <span class="cm">// Hash by modulo</span>
+}
+
+<span class="cm">// Simulate routing users to shards</span>
+[<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">4</span>,<span class="num">5</span>,<span class="num">6</span>].forEach(id => {
+  console.log(<span class="str">`User ${id} → Shard ${getShard(id)}`</span>);
+});
+<span class="cm">// User 1 → Shard 1</span>
+<span class="cm">// User 2 → Shard 2</span>
+<span class="cm">// User 3 → Shard 0</span>
+<span class="cm">// User 4 → Shard 1 (evenly distributed)</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 18 -->
+      <div class="day-card" data-day="18">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 18</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,18)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Rate Limiting</div>
+            <div class="day-subtitle">Protect your API from being overwhelmed</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-js">JavaScript</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            <strong>Rate Limiting</strong> controls how many requests a user can make in a time window. Prevents abuse, bot attacks, and server overload.<br><br>
+            Example: Twitter allows 300 tweets per 3 hours. GitHub API allows 5000 requests per hour. If you exceed the limit, you get a <strong>429 Too Many Requests</strong> error.<br><br>
+            <strong>Algorithms:</strong> Token Bucket, Leaky Bucket, Fixed Window, Sliding Window.
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — Token Bucket Rate Limiter</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">class</span> <span class="cls">RateLimiter</span> {
+  <span class="fn">constructor</span>(maxRequests, windowMs) {
+    <span class="kw">this</span>.max = maxRequests;
+    <span class="kw">this</span>.window = windowMs;
+    <span class="kw">this</span>.requests = <span class="kw">new</span> <span class="cls">Map</span>(); <span class="cm">// userId → [timestamps]</span>
+  }
+
+  <span class="fn">isAllowed</span>(userId) {
+    <span class="kw">const</span> now = Date.now();
+    <span class="kw">const</span> times = <span class="kw">this</span>.requests.get(userId) || [];
+    <span class="kw">const</span> recent = times.filter(t => now - t < <span class="kw">this</span>.window);
+    <span class="kw">if</span> (recent.length >= <span class="kw">this</span>.max) <span class="kw">return false</span>; <span class="cm">// ❌ Blocked</span>
+    recent.push(now);
+    <span class="kw">this</span>.requests.set(userId, recent);
+    <span class="kw">return true</span>; <span class="cm">// ✅ Allowed</span>
+  }
+}
+
+<span class="kw">const</span> limiter = <span class="kw">new</span> <span class="cls">RateLimiter</span>(<span class="num">3</span>, <span class="num">1000</span>); <span class="cm">// 3 req/sec</span>
+console.log(limiter.isAllowed(<span class="str">'user1'</span>)); <span class="cm">// true</span>
+console.log(limiter.isAllowed(<span class="str">'user1'</span>)); <span class="cm">// true</span>
+console.log(limiter.isAllowed(<span class="str">'user1'</span>)); <span class="cm">// true</span>
+console.log(limiter.isAllowed(<span class="str">'user1'</span>)); <span class="cm">// false — BLOCKED!</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 19 -->
+      <div class="day-card" data-day="19">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 19</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,19)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Authentication & Authorization</div>
+            <div class="day-subtitle">Who are you? What can you do?</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-js">JavaScript</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            <strong>Authentication</strong> = Verifying who you are (login with username/password).<br>
+            <strong>Authorization</strong> = Deciding what you're allowed to do (admin vs normal user).<br><br>
+            <strong>JWT (JSON Web Token)</strong>: After you log in, the server gives you a token (like a hall pass). You send this token with every request. The server checks it to know who you are without hitting the database each time.
+          </div>
+          <div class="analogy-box">
+            <b>🎟️ Movie ticket analogy:</b> Authentication = showing your ID at the door (proving who you are). Authorization = your ticket says "Row B Seat 5" — that's your permission (what you can access).
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — JWT Auth Flow</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">const</span> jwt = require(<span class="str">'jsonwebtoken'</span>);
+<span class="kw">const</span> SECRET = <span class="str">'my-secret-key'</span>;
+
+<span class="cm">// Login — generate token</span>
+<span class="kw">function</span> <span class="fn">login</span>(username) {
+  <span class="kw">const</span> token = jwt.sign({ user: username }, SECRET, { expiresIn: <span class="str">'1h'</span> });
+  console.log(<span class="str">'🔑 Token issued!'</span>);
+  <span class="kw">return</span> token;
+}
+
+<span class="cm">// Verify — check token on each request</span>
+<span class="kw">function</span> <span class="fn">verify</span>(token) {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> data = jwt.verify(token, SECRET);
+    console.log(<span class="str">`✅ Welcome ${data.user}!`</span>);
+  } <span class="kw">catch</span> { console.log(<span class="str">'❌ Invalid token'</span>); }
+}
+
+<span class="kw">const</span> token = <span class="fn">login</span>(<span class="str">'Arjun'</span>);
+<span class="fn">verify</span>(token); <span class="cm">// ✅ Welcome Arjun!</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 20 -->
+      <div class="day-card" data-day="20">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 20</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,20)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">WebSockets & Real-time Systems</div>
+            <div class="day-subtitle">Instant two-way communication</div>
+            <div class="tag-row"><span class="tag tag-theory">Theory</span><span class="tag tag-js">JavaScript</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Theory</div>
+          <div class="theory-text">
+            Normal HTTP: You ask → Server answers → Connection closes. You have to keep asking.<br><br>
+            <strong>WebSockets</strong>: You open one persistent connection. Both you and the server can send messages anytime — instantly. Used in chat apps, live scores, stock prices, multiplayer games.<br><br>
+            WhatsApp, Slack, online chess — all use WebSockets for real-time messaging.
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — WebSocket Chat</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="cm">// Server (Node.js + ws library)</span>
+<span class="kw">const</span> WebSocket = require(<span class="str">'ws'</span>);
+<span class="kw">const</span> wss = <span class="kw">new</span> WebSocket.Server({ port: <span class="num">8080</span> });
+
+wss.on(<span class="str">'connection'</span>, (ws) => {
+  console.log(<span class="str">'🟢 New user connected!'</span>);
+  ws.on(<span class="str">'message'</span>, (msg) => {
+    <span class="cm">// Broadcast to ALL connected users</span>
+    wss.clients.forEach(client => {
+      <span class="kw">if</span> (client.readyState === WebSocket.OPEN) {
+        client.send(msg.toString());
+      }
+    });
+  });
+});
+
+<span class="cm">// Client (in browser)</span>
+<span class="kw">const</span> ws = <span class="kw">new</span> WebSocket(<span class="str">'ws://localhost:8080'</span>);
+ws.send(<span class="str">'Hello everyone!'</span>); <span class="cm">// Instant broadcast</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 21 -->
+      <div class="day-card" data-day="21">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 21</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,21)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Week 3 Project — Rate Limited API</div>
+            <div class="day-subtitle">Build a secure, rate-limited REST API</div>
+            <div class="tag-row"><span class="tag tag-project">Mini Project</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">🎯 Project</div>
+          <div class="theory-text">Build a Flask API with JWT authentication and rate limiting. Only logged-in users can access it, and they're limited to 5 requests per minute.</div>
+          <div class="section-label">🐍 Python Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-py">Python — Secure Rate-Limited API</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">from</span> flask <span class="kw">import</span> Flask, request, jsonify
+<span class="kw">from</span> collections <span class="kw">import</span> defaultdict
+<span class="kw">import</span> time
+
+app = Flask(__name__)
+request_log = defaultdict(list)
+
+<span class="kw">def</span> <span class="fn">rate_limit</span>(user, max_req=<span class="num">5</span>, window=<span class="num">60</span>):
+    now = time.time()
+    times = [t <span class="kw">for</span> t <span class="kw">in</span> request_log[user] <span class="kw">if</span> now-t < window]
+    <span class="kw">if</span> <span class="num">len</span>(times) >= max_req: <span class="kw">return False</span>
+    times.append(now)
+    request_log[user] = times
+    <span class="kw">return True</span>
+
+<span class="kw">@</span>app.route(<span class="str">'/data'</span>)
+<span class="kw">def</span> <span class="fn">get_data</span>():
+    user = request.args.get(<span class="str">'user'</span>, <span class="str">'anonymous'</span>)
+    <span class="kw">if not</span> <span class="fn">rate_limit</span>(user):
+        <span class="kw">return</span> jsonify({<span class="str">'error'</span>: <span class="str">'Too many requests'</span>}), <span class="num">429</span>
+    <span class="kw">return</span> jsonify({<span class="str">'data'</span>: <span class="str">'Here you go!'</span>})</pre>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== WEEK 4 ===== -->
+  <div class="week-section">
+    <div class="week-header">
+      <span class="week-tag" style="background:rgba(16,185,129,0.1);color:#34d399;border:1px solid rgba(16,185,129,0.3)">Week 04</span>
+      <span class="week-title">Design Practice</span>
+      <span class="week-days-count">Days 22–30</span>
+    </div>
+    <div class="days-grid">
+
+      <!-- DAY 22 -->
+      <div class="day-card" data-day="22">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 22</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,22)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Design a URL Shortener</div>
+            <div class="day-subtitle">Like bit.ly — long URLs become short ones</div>
+            <div class="tag-row"><span class="tag tag-project">Full Design</span><span class="tag tag-js">JavaScript</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Design Breakdown</div>
+          <div class="theory-text">
+            <strong>Requirements:</strong> User pastes a long URL → System gives a short URL like bit.ly/abc123 → When someone visits short URL, they're redirected to original.<br><br>
+            <strong>Components:</strong><br>
+            — API Server: Accepts and redirects URLs<br>
+            — Database: Stores short→long URL mappings<br>
+            — Cache: Popular short URLs cached for speed<br>
+            — ID Generator: Creates unique short codes (Base62 encoding)<br><br>
+            <strong>Estimation:</strong> 100M URLs created/day. 10B redirects/day. Need a fast DB (Redis for cache, MySQL for storage).
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — URL Shortener Core</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">const</span> CHARS = <span class="str">'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'</span>;
+<span class="kw">const</span> db = <span class="kw">new</span> Map(); <span class="cm">// short → long</span>
+<span class="kw">const</span> cache = <span class="kw">new</span> Map();
+
+<span class="kw">function</span> <span class="fn">encode</span>(num) {
+  <span class="kw">let</span> code = <span class="str">''</span>;
+  <span class="kw">while</span> (num > <span class="num">0</span>) { code = CHARS[num % <span class="num">62</span>] + code; num = Math.floor(num/<span class="num">62</span>); }
+  <span class="kw">return</span> code.padStart(<span class="num">6</span>, <span class="str">'0'</span>);
+}
+
+<span class="kw">let</span> counter = <span class="num">100000</span>;
+<span class="kw">function</span> <span class="fn">shorten</span>(longUrl) {
+  <span class="kw">const</span> shortCode = <span class="fn">encode</span>(counter++);
+  db.set(shortCode, longUrl);
+  <span class="kw">return</span> <span class="str">`https://sho.rt/${shortCode}`</span>;
+}
+
+<span class="kw">function</span> <span class="fn">redirect</span>(code) {
+  <span class="kw">if</span> (cache.has(code)) <span class="kw">return</span> cache.get(code); <span class="cm">// ⚡ Cache hit</span>
+  <span class="kw">const</span> url = db.get(code);
+  cache.set(code, url);
+  <span class="kw">return</span> url;
+}
+
+console.log(shorten(<span class="str">'https://very-long-website.com/article/123'</span>));
+<span class="cm">// https://sho.rt/00D2h1</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 23 -->
+      <div class="day-card" data-day="23">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 23</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,23)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Design a Chat Application</div>
+            <div class="day-subtitle">Like WhatsApp — instant messaging at scale</div>
+            <div class="tag-row"><span class="tag tag-project">Full Design</span><span class="tag tag-js">JavaScript</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Design Breakdown</div>
+          <div class="theory-text">
+            <strong>Components needed:</strong><br>
+            — <strong>WebSocket Servers</strong>: Handle real-time messaging<br>
+            — <strong>Message DB</strong>: Store all messages (Cassandra for scale)<br>
+            — <strong>User Service</strong>: Manage users, contacts<br>
+            — <strong>Presence Service</strong>: "Online/Offline" status<br>
+            — <strong>Push Notifications</strong>: Alert users when offline<br>
+            — <strong>Media Service</strong>: Store images/videos (S3 + CDN)<br><br>
+            <strong>Key challenge:</strong> When user is offline, messages queue up. When they come online, messages are delivered in order.
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — Chat Message Handler</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre"><span class="kw">class</span> <span class="cls">ChatServer</span> {
+  <span class="fn">constructor</span>() {
+    <span class="kw">this</span>.users = <span class="kw">new</span> Map();   <span class="cm">// userId → websocket</span>
+    <span class="kw">this</span>.offline = <span class="kw">new</span> Map(); <span class="cm">// userId → [queued msgs]</span>
+  }
+
+  <span class="fn">connect</span>(userId, ws) {
+    <span class="kw">this</span>.users.set(userId, ws);
+    <span class="cm">// Deliver any queued messages</span>
+    <span class="kw">const</span> pending = <span class="kw">this</span>.offline.get(userId) || [];
+    pending.forEach(msg => ws.send(JSON.stringify(msg)));
+    <span class="kw">this</span>.offline.delete(userId);
+  }
+
+  <span class="fn">send</span>(toUserId, message) {
+    <span class="kw">const</span> ws = <span class="kw">this</span>.users.get(toUserId);
+    <span class="kw">if</span> (ws) ws.send(JSON.stringify(message)); <span class="cm">// Online ✅</span>
+    <span class="kw">else</span> {
+      <span class="cm">// Offline — queue it</span>
+      <span class="kw">const</span> q = <span class="kw">this</span>.offline.get(toUserId) || [];
+      q.push(message);
+      <span class="kw">this</span>.offline.set(toUserId, q);
+    }
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 24 -->
+      <div class="day-card" data-day="24">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 24</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,24)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Design a Social Media Feed</div>
+            <div class="day-subtitle">Like Instagram — personalized posts at scale</div>
+            <div class="tag-row"><span class="tag tag-project">Full Design</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Design Breakdown</div>
+          <div class="theory-text">
+            <strong>Two approaches to building a feed:</strong><br><br>
+            <strong>Pull Model (Fan-out on Read):</strong> When you open Instagram, it fetches posts from everyone you follow and sorts them. Simple but slow for users who follow 1000 people.<br><br>
+            <strong>Push Model (Fan-out on Write):</strong> When a user posts, immediately push that post to all their followers' feeds. Feeds are pre-computed and cached. Fast to read, but expensive for celebrities with millions of followers.<br><br>
+            <strong>Hybrid (what Instagram uses):</strong> Push for regular users. Pull for celebrities. Cache all feeds in Redis for fast reads.
+          </div>
+          <div class="section-label">🐍 Python Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-py">Python — Feed Fan-out System</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">from</span> collections <span class="kw">import</span> defaultdict
+
+<span class="kw">class</span> <span class="cls">FeedSystem</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.followers = defaultdict(set)  <span class="cm"># user → followers</span>
+        self.feeds = defaultdict(list)     <span class="cm"># user → feed posts</span>
+
+    <span class="kw">def</span> <span class="fn">follow</span>(self, user, celebrity):
+        self.followers[celebrity].add(user)
+
+    <span class="kw">def</span> <span class="fn">post</span>(self, author, content):
+        post = {<span class="str">'by'</span>: author, <span class="str">'text'</span>: content}
+        <span class="cm"># Fan-out: push to all followers' feeds</span>
+        <span class="kw">for</span> follower <span class="kw">in</span> self.followers[author]:
+            self.feeds[follower].insert(<span class="num">0</span>, post)
+            self.feeds[follower] = self.feeds[follower][:<span class="num">50</span>]
+
+    <span class="kw">def</span> <span class="fn">get_feed</span>(self, user):
+        <span class="kw">return</span> self.feeds[user][:<span class="num">10</span>]
+
+feed = <span class="cls">FeedSystem</span>()
+feed.follow(<span class="str">'Priya'</span>, <span class="str">'Virat'</span>)
+feed.post(<span class="str">'Virat'</span>, <span class="str">'Just won the match! 🏏'</span>)
+<span class="kw">print</span>(feed.get_feed(<span class="str">'Priya'</span>))</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 25 -->
+      <div class="day-card" data-day="25">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 25</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,25)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Design a File Storage System</div>
+            <div class="day-subtitle">Like Google Drive — store & share files</div>
+            <div class="tag-row"><span class="tag tag-project">Full Design</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Design Breakdown</div>
+          <div class="theory-text">
+            <strong>Key components:</strong><br>
+            — <strong>Block Storage</strong>: Files are split into blocks (4KB each). Only changed blocks are re-uploaded (delta sync).<br>
+            — <strong>Metadata DB</strong>: Stores file names, paths, sizes, owner IDs.<br>
+            — <strong>Object Storage</strong>: Raw file content stored in S3-like systems.<br>
+            — <strong>CDN</strong>: Download files from nearest location.<br><br>
+            <strong>Deduplication:</strong> If two users upload the same file, only store one copy. Use a hash (SHA-256) to detect duplicates.
+          </div>
+          <div class="section-label">🐍 Python Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-py">Python — File Deduplication</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre"><span class="kw">import</span> hashlib
+
+<span class="kw">class</span> <span class="cls">FileStorage</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.content_store = {}  <span class="cm"># hash → file_data</span>
+        self.file_index = {}     <span class="cm"># filename → hash</span>
+
+    <span class="kw">def</span> <span class="fn">upload</span>(self, filename, data):
+        <span class="cm"># Create a fingerprint of the file</span>
+        file_hash = hashlib.sha256(data.encode()).hexdigest()[:<span class="num">8</span>]
+        <span class="kw">if</span> file_hash <span class="kw">not in</span> self.content_store:
+            self.content_store[file_hash] = data  <span class="cm"># Store once</span>
+            <span class="kw">print</span>(<span class="str">f"✅ Stored new file (hash: {file_hash})"</span>)
+        <span class="kw">else</span>:
+            <span class="kw">print</span>(<span class="str">f"♻️  Duplicate! Reusing existing hash"</span>)
+        self.file_index[filename] = file_hash
+
+storage = <span class="cls">FileStorage</span>()
+storage.upload(<span class="str">'notes.txt'</span>, <span class="str">'Hello World'</span>)   <span class="cm"># ✅ Stored</span>
+storage.upload(<span class="str">'copy.txt'</span>, <span class="str">'Hello World'</span>)    <span class="cm"># ♻️ Reused!</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 26 -->
+      <div class="day-card" data-day="26">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 26</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,26)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Design a Search Engine (Basic)</div>
+            <div class="day-subtitle">How Google finds pages in milliseconds</div>
+            <div class="tag-row"><span class="tag tag-project">Full Design</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Design Breakdown</div>
+          <div class="theory-text">
+            <strong>Crawling:</strong> Bots visit every webpage on the internet, follow links, and download content.<br><br>
+            <strong>Indexing:</strong> Build an "inverted index" — a dictionary where each word points to all pages that contain it. "cricket" → [ESPN.com, BCCI.com, Cricinfo.com]<br><br>
+            <strong>Ranking:</strong> Which page appears first? Google's <strong>PageRank</strong> algorithm scores pages based on how many other pages link to them. More links = more trusted.
+          </div>
+          <div class="section-label">🐍 Python Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-py">Python — Inverted Index</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">from</span> collections <span class="kw">import</span> defaultdict
+
+<span class="kw">class</span> <span class="cls">SearchIndex</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.index = defaultdict(set)  <span class="cm"># word → {pages}</span>
+
+    <span class="kw">def</span> <span class="fn">add_page</span>(self, url, content):
+        <span class="kw">for</span> word <span class="kw">in</span> content.lower().split():
+            self.index[word].add(url)
+
+    <span class="kw">def</span> <span class="fn">search</span>(self, query):
+        words = query.lower().split()
+        results = <span class="kw">None</span>
+        <span class="kw">for</span> word <span class="kw">in</span> words:
+            pages = self.index.get(word, set())
+            results = pages <span class="kw">if</span> results <span class="kw">is None else</span> results & pages
+        <span class="kw">return</span> results <span class="kw">or</span> set()
+
+engine = <span class="cls">SearchIndex</span>()
+engine.add_page(<span class="str">'cricket.com'</span>, <span class="str">'India won cricket match today'</span>)
+engine.add_page(<span class="str">'news.com'</span>, <span class="str">'cricket world cup final today'</span>)
+<span class="kw">print</span>(engine.search(<span class="str">'cricket today'</span>))
+<span class="cm"># {'cricket.com', 'news.com'}</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 27 -->
+      <div class="day-card" data-day="27">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 27</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,27)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Design an E-Commerce System</div>
+            <div class="day-subtitle">Handle flash sales, carts, and payments</div>
+            <div class="tag-row"><span class="tag tag-project">Full Design</span><span class="tag tag-js">JavaScript</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Design Breakdown</div>
+          <div class="theory-text">
+            <strong>Services:</strong> Product Catalog, Cart, Order, Payment, Inventory, Notification<br><br>
+            <strong>Flash Sale Problem:</strong> 100,000 people try to buy the same item at the same time. How do you ensure only one person buys the last item?<br><br>
+            Solution: Use <strong>Redis atomic operations</strong>. Lock the inventory with a distributed lock. Only one transaction succeeds; others get "Sold Out."<br><br>
+            <strong>Payment:</strong> Never handle money directly. Integrate with payment gateways (Razorpay, Stripe) that handle security.
+          </div>
+          <div class="section-label">💛 JavaScript Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-js">JavaScript — Inventory with Atomic Check</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre><span class="kw">class</span> <span class="cls">InventoryManager</span> {
+  <span class="fn">constructor</span>() {
+    <span class="kw">this</span>.stock = <span class="kw">new</span> Map();
+    <span class="kw">this</span>.locks = <span class="kw">new</span> Set();
+  }
+
+  <span class="fn">setStock</span>(itemId, qty) { <span class="kw">this</span>.stock.set(itemId, qty); }
+
+  <span class="kw">async</span> <span class="fn">purchase</span>(itemId, userId) {
+    <span class="kw">if</span> (<span class="kw">this</span>.locks.has(itemId)) {
+      <span class="kw">return</span> { success: <span class="kw">false</span>, reason: <span class="str">'⏳ Please retry'</span> };
+    }
+    <span class="kw">this</span>.locks.add(itemId); <span class="cm">// Lock it!</span>
+    <span class="kw">const</span> qty = <span class="kw">this</span>.stock.get(itemId) || <span class="num">0</span>;
+    <span class="kw">if</span> (qty <= <span class="num">0</span>) { <span class="kw">this</span>.locks.delete(itemId); <span class="kw">return</span> { success: <span class="kw">false</span>, reason: <span class="str">'❌ Sold Out'</span> }; }
+    <span class="kw">this</span>.stock.set(itemId, qty - <span class="num">1</span>);
+    <span class="kw">this</span>.locks.delete(itemId); <span class="cm">// Unlock</span>
+    <span class="kw">return</span> { success: <span class="kw">true</span>, msg: <span class="str">`✅ ${userId} bought item!`</span> };
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 28 -->
+      <div class="day-card" data-day="28">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 28</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,28)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Design a Video Streaming Service</div>
+            <div class="day-subtitle">Like YouTube — stream to billions</div>
+            <div class="tag-row"><span class="tag tag-project">Full Design</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Design Breakdown</div>
+          <div class="theory-text">
+            <strong>Upload flow:</strong> User uploads video → Raw video stored in object storage → Transcoding service converts it to multiple resolutions (1080p, 720p, 360p) → CDN stores all versions.<br><br>
+            <strong>Watch flow:</strong> User opens video → Player checks their internet speed → Requests the right resolution → Adaptive Bitrate Streaming (ABR) switches quality smoothly if speed changes.<br><br>
+            <strong>Key insight:</strong> Videos are NOT served from one server. They're split into small 2-second chunks. The player downloads chunks ahead of time (pre-buffering) for smooth playback.
+          </div>
+          <div class="concepts-grid">
+            <div class="concept-item"><div class="concept-icon">📦</div><div class="concept-name">Object Storage</div><div class="concept-desc">Store raw videos (S3)</div></div>
+            <div class="concept-item"><div class="concept-icon">🔄</div><div class="concept-name">Transcoding</div><div class="concept-desc">Convert to multiple formats</div></div>
+            <div class="concept-item"><div class="concept-icon">🌐</div><div class="concept-name">CDN</div><div class="concept-desc">Serve from nearest node</div></div>
+            <div class="concept-item"><div class="concept-icon">📶</div><div class="concept-name">ABR</div><div class="concept-desc">Adaptive quality streaming</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 29 -->
+      <div class="day-card" data-day="29">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 29</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,29)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">Design a Notification System</div>
+            <div class="day-subtitle">Push, email, SMS — deliver reliably at scale</div>
+            <div class="tag-row"><span class="tag tag-project">Full Design</span><span class="tag tag-py">Python</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">📖 Design Breakdown</div>
+          <div class="theory-text">
+            <strong>Types:</strong> Push notifications (APNs for iOS, FCM for Android), Email (SendGrid), SMS (Twilio).<br><br>
+            <strong>Flow:</strong> Event triggers → Notification Service → Puts message in queue → Worker pulls from queue → Sends via appropriate channel → Logs delivery status.<br><br>
+            <strong>Key challenges:</strong><br>
+            — <strong>Retry logic</strong>: If SMS fails, try again 3 times<br>
+            — <strong>Deduplication</strong>: Don't send same notification twice<br>
+            — <strong>Rate limiting</strong>: Don't spam users with 100 notifications/minute<br>
+            — <strong>Priority queues</strong>: OTP (high priority) before promotional (low priority)
+          </div>
+          <div class="section-label">🐍 Python Example</div>
+          <div class="code-block">
+            <div class="code-header"><span class="code-lang lang-py">Python — Notification Dispatcher</span><button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+            <pre"><span class="kw">import</span> time
+
+<span class="kw">class</span> <span class="cls">NotificationService</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.sent = set()  <span class="cm"># Track sent to avoid duplicates</span>
+
+    <span class="kw">def</span> <span class="fn">send</span>(self, notif_id, user, channel, msg, retries=<span class="num">3</span>):
+        <span class="kw">if</span> notif_id <span class="kw">in</span> self.sent:
+            <span class="kw">return print</span>(<span class="str">f"⚠️ Duplicate, skipping {notif_id}"</span>)
+        <span class="kw">for</span> attempt <span class="kw">in</span> range(retries):
+            success = self.<span class="fn">_deliver</span>(user, channel, msg)
+            <span class="kw">if</span> success:
+                self.sent.add(notif_id)
+                <span class="kw">return print</span>(<span class="str">f"✅ Sent via {channel} to {user}"</span>)
+            time.sleep(<span class="num">2</span> ** attempt)  <span class="cm"># Exponential backoff</span>
+        <span class="kw">print</span>(<span class="str">f"❌ Failed after {retries} tries"</span>)
+
+    <span class="kw">def</span> <span class="fn">_deliver</span>(self, user, channel, msg):
+        <span class="kw">return True</span>  <span class="cm"># Simulate delivery</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 30 -->
+      <div class="day-card" data-day="30">
+        <div class="day-header" onclick="toggleDay(this)">
+          <span class="day-num">DAY 30</span>
+          <div class="day-checkbox" onclick="toggleCheck(event,30)"></div>
+          <div class="day-title-wrap">
+            <div class="day-title">🎓 Final Review & What's Next</div>
+            <div class="day-subtitle">You did it! Key takeaways and the road ahead</div>
+            <div class="tag-row"><span class="tag tag-theory">Review</span><span class="tag tag-project">Graduation</span></div>
+          </div>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="day-body">
+          <div class="section-label">🏆 What You've Learned</div>
+          <div class="theory-text">
+            Over 30 days you went from "what is system design?" to being able to design real systems used by millions. Here's your knowledge map:
+          </div>
+          <div class="concepts-grid">
+            <div class="concept-item"><div class="concept-icon">🌐</div><div class="concept-name">Client-Server</div><div class="concept-desc">How apps communicate</div></div>
+            <div class="concept-item"><div class="concept-icon">🗄️</div><div class="concept-name">Databases</div><div class="concept-desc">SQL & NoSQL</div></div>
+            <div class="concept-item"><div class="concept-icon">⚡</div><div class="concept-name">Caching</div><div class="concept-desc">Speed optimization</div></div>
+            <div class="concept-item"><div class="concept-icon">⚖️</div><div class="concept-name">Load Balancing</div><div class="concept-desc">Traffic distribution</div></div>
+            <div class="concept-item"><div class="concept-icon">📬</div><div class="concept-name">Message Queues</div><div class="concept-desc">Async communication</div></div>
+            <div class="concept-item"><div class="concept-icon">🔑</div><div class="concept-name">Auth & Security</div><div class="concept-desc">JWT, rate limits</div></div>
+            <div class="concept-item"><div class="concept-icon">🔀</div><div class="concept-name">Sharding</div><div class="concept-desc">Database at scale</div></div>
+            <div class="concept-item"><div class="concept-icon">📡</div><div class="concept-name">Real-time</div><div class="concept-desc">WebSockets</div></div>
+          </div>
+          <div class="section-label">🚀 What's Next</div>
+          <div class="theory-text">
+            <strong>Deepen your knowledge:</strong><br>
+            → Study Kubernetes and Docker (containerization)<br>
+            → Learn about Distributed Systems (Raft consensus, Paxos)<br>
+            → Explore Cloud Platforms (AWS, GCP, Azure)<br>
+            → Practice on <strong>Leetcode System Design</strong> and <strong>Grokking the System Design Interview</strong><br><br>
+            <strong>Build real projects:</strong> The best way to learn is to build. Start with a clone — Twitter, Reddit, or WhatsApp. Apply every concept from this course.
+          </div>
+          <div class="analogy-box">
+            <b>🎉 Congratulations!</b> You now think like an engineer. System design isn't memorizing answers — it's knowing the right questions to ask and the trade-offs to make. Keep building, keep learning!
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    System Design in 30 Days &nbsp;·&nbsp; Built for curious minds &nbsp;·&nbsp; Check off each day as you go 🚀
+  </footer>
+</div>
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+  // Load saved progress
+  const saved = JSON.parse(localStorage.getItem('sd30_progress') || '[]');
+  let completed = new Set(saved);
+
+  function updateProgress() {
+    const pct = (completed.size / 30) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressCount').textContent = completed.size + ' / 30';
+    localStorage.setItem('sd30_progress', JSON.stringify([...completed]));
+  }
+
+  function toggleCheck(e, day) {
+    e.stopPropagation();
+    const card = document.querySelector(`[data-day="${day}"]`);
+    const cb = card.querySelector('.day-checkbox');
+    if (completed.has(day)) {
+      completed.delete(day);
+      cb.classList.remove('done');
+      cb.textContent = '';
+      card.style.borderColor = '';
+    } else {
+      completed.add(day);
+      cb.classList.add('done');
+      cb.textContent = '✓';
+      card.style.borderColor = '#10b981';
+    }
+    updateProgress();
+  }
+
+  function toggleDay(header) {
+    const card = header.parentElement;
+    card.classList.toggle('open');
+  }
+
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'copied!';
+      btn.style.color = '#10b981';
+      setTimeout(() => { btn.textContent = 'copy'; btn.style.color = ''; }, 2000);
+    });
+  }
+
+  // Restore checkboxes
+  completed.forEach(day => {
+    const card = document.querySelector(`[data-day="${day}"]`);
+    if (card) {
+      card.querySelector('.day-checkbox').classList.add('done');
+      card.querySelector('.day-checkbox').textContent = '✓';
+      card.style.borderColor = '#10b981';
+    }
+  });
+
+  updateProgress();
+
+  // Scroll to top button
+  window.addEventListener('scroll', () => {
+    document.getElementById('scrollTop').classList.toggle('visible', window.scrollY > 400);
+  });
+</script>
+</body>
+</html>
