@@ -32,32 +32,31 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: Why Relationships Are SQL's Superpower
 
-**Tables and Rows**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+SQL databases let tables reference each other through keys. A `students` table, a `subjects` table, and a `scores` table can be joined in one query to answer "what are all Grade 10 students' Maths scores?" — without making three separate requests.
 
-**Primary Keys**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**ACID guarantees prevent data corruption at scale.** When two people transfer money simultaneously, the database must ensure neither transaction sees the other's half-finished state. Isolation levels (READ COMMITTED, REPEATABLE READ, SERIALIZABLE) control exactly how much concurrent transactions can see of each other.
 
-**Foreign Keys**: This is where the real engineering happens. Companies spend months optimising this.
+**Indexes are the most important performance tool in SQL.** `SELECT * FROM users WHERE email = 'x@y.com'` without an index scans every row. With a B-tree index on `email`, it jumps directly to the matching row in O(log N). At 10 million rows, this is the difference between 30 seconds and 1 millisecond.
 
-### Common Mistakes to Avoid
-
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**When SQL is the right choice:** structured data with clear relationships, strong consistency requirements (banking, inventory), complex queries joining multiple tables, or any situation where you need ACID guarantees. PostgreSQL powers Instagram, Twitch, and Shopify at massive scale.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **SQL Databases** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: A School's Paper Record System
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+Think of three separate filing cabinets: Student Profiles, Subject Catalogue, and Exam Score Sheets.
+
+**Foreign key = the roll number on every score sheet.** Each sheet has the student's roll number written on it. That number links the score back to the correct student profile.
+
+**JOIN = the admin combining two cabinets.** "Give me Priya's Maths score" — the admin opens Score Sheets, finds Priya's roll number, matches it to the Subject Catalogue, and combines the result. That's exactly what SQL JOIN does.
+
+**Transaction = submitting a complete report card.** The school only accepts a fully signed report card. If the teacher fills in 5 subjects and the pen runs out, the incomplete card is discarded. Either all marks are submitted or none — that's atomicity.
+
+**Index = alphabetical dividers in a cabinet.** Without dividers, finding a student whose surname starts with "P" means flipping through all 800 files. With dividers you jump straight to P. A database index does the same — O(log N) instead of O(N) scan.
 
 ---
 

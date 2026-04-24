@@ -32,32 +32,31 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: What Service Meshes Remove from Application Code
 
-**Sidecar Proxy**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+At 10 microservices, engineers manually implement in each service: retries with exponential backoff, timeouts, circuit breakers, mutual TLS, distributed tracing. Implementing all this in Go, Java, Python, and Node.js means four independent implementations that must stay in sync.
 
-**Istio**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**A service mesh moves all of this to a sidecar proxy.** A small Envoy proxy runs alongside every service in the same Kubernetes pod. The application makes a plain HTTP call. The sidecar handles: retrying failed requests, enforcing timeouts, opening the circuit on high error rates, encrypting with mutual TLS, adding trace IDs for distributed tracing.
 
-**Envoy**: This is where the real engineering happens. Companies spend months optimising this.
+**The control plane (Istio) configures all sidecars centrally.** Update a retry policy once → all 100 services instantly use the new policy. No code changes, no redeployments.
 
-### Common Mistakes to Avoid
-
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**Traffic splitting for zero-downtime deployments.** "Send 10% of traffic to v2.0 of Payment Service, 90% to v1.0." Watch error rates. If v2.0 is healthy, shift to 20%, then 100%. If errors appear, instantly revert to 100% v1.0. This is canary deployment — safe, reversible, zero downtime.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **Service Mesh** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: A School's Personal Assistant System
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+A large school has 100 teachers (services). Each teacher manages their own communication with inconsistent policies — different follow-up times, different logging, different security checks.
+
+**Without a service mesh:** Teacher A follows up on calls after 30 minutes. Teacher B has a different policy. Teacher C doesn't follow up. When the school changes its communication policy, someone must visit every teacher individually.
+
+**With a service mesh (identical personal assistants — the sidecar):** Each of the 100 teachers gets the same trained personal assistant. Every assistant follows the same rules: "If a call isn't answered in 5 minutes, try again twice. After three failures, mark as unavailable. Log every interaction. Encrypt all communications."
+
+**The headmaster's secretary (Istio control plane):** Sends updated instructions to all 100 assistants at once: "New policy — follow up after 3 minutes instead of 5." All 100 assistants update their behaviour instantly. No teacher changes their personal workflow.
+
+**Traffic splitting = a trainee teacher shadowing.** "Let the new Maths teacher handle 10% of Grade 10 queries while the experienced teacher handles 90%." If the trainee's answers have a high error rate, shift all queries back to the experienced teacher instantly. The sidecar handles this — no student (client) notices the change.
 
 ---
 

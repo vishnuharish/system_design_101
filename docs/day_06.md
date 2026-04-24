@@ -31,32 +31,31 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: Four NoSQL Models, Four Different Problems
 
-**Document Store**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+**Document Stores (MongoDB)** store JSON-like objects with no fixed schema. One user document can have 3 hobbies; another might have none. Used by Uber for trip data and eBay for product listings — every product has different attributes.
 
-**Key-Value Store**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**Key-Value Stores (Redis, DynamoDB)** are pure dictionaries. Given a key, return the value in sub-millisecond time. Perfect for session storage, feature flags, and rate-limiting counters. If your query is always "give me the thing for key X", key-value is the right model.
 
-**Column-Family**: This is where the real engineering happens. Companies spend months optimising this.
+**Column-Family Stores (Cassandra)** are optimised for massive write throughput and time-ordered queries. All writes are sequential — 100x faster than random disk I/O. Netflix uses Cassandra to store viewing history for 230 million users: billions of rows, simple queries by user ID and timestamp.
 
-### Common Mistakes to Avoid
+**Graph Databases (Neo4j)** store nodes and edges. "Who are friends-of-friends of User 5 who also like cricket?" is recursive in SQL but a natural traversal in a graph database. Used by LinkedIn for professional connections and fraud detection systems for finding rings of suspicious accounts.
 
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**Never switch to NoSQL because it's fashionable.** Switch because your specific access pattern demands it: flexible schema, extreme write throughput, graph traversals, or pure key lookups at huge scale.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **NoSQL Databases** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: Four Storage Systems in a School
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+**Document Store = Student Files (flexible folders).** Priya's folder has an allergy certificate, a sports award, and 3 medical forms. Arjun's has only academic records. No two student folders have the same structure — and that's perfectly fine. Document databases work the same way.
+
+**Key-Value Store = Staff ID Card System.** The security guard looks up "ID-4521" and instantly gets the staff member's access level. Pure lookup by key, no searching through names or descriptions. Redis works identically: `GET user:session:abc123` returns the session in under 1ms.
+
+**Column-Family = Attendance Register.** The register records every student's attendance every period. To find "all absences in March for Grade 10", you scan only the date and status columns — skipping name, address, and parent contact columns. Cassandra's columnar storage makes this column-specific scan extremely fast.
+
+**Graph Database = Contact Tracing Map.** A student tests positive for a contagious illness. "Who sat next to them? Who shared lab equipment? Who was in the same group?" You need to trace relationships between people, not look up records by key. A graph database traverses these connections instantly.
 
 ---
 

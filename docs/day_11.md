@@ -1,259 +1,231 @@
 # Day 11: Load Balancing
-> *Distribute traffic so no single server drowns*
+> *Distribute traffic so no single server is overwhelmed*
 
-**Month 1: Foundations › Week 2: Performance and Infrastructure**  
-**Tags:** `Theory` `JavaScript` `Python`  
-**Estimated Time:** 90–120 minutes
+**Month 1: Foundations > Week 2: Performance and Infrastructure**
+**Tags:** `Theory` `JavaScript` `Python`
+**Estimated Time:** 90-120 minutes
 
 ---
 
-## 📖 Theory
+## Theory
 
-### What You'll Learn Today
+### The Problem Load Balancers Solve
 
-Today we explore **Load Balancing** — a fundamental concept you'll encounter when designing large-scale systems. Understanding this well is the difference between a system that breaks under load and one that scales gracefully.
+A single server handles ~1,000 requests/sec. On Black Friday you need 50,000 req/s. You can't make one server 50x bigger — you add 50 servers and put a **load balancer** in front with a single IP address. It distributes incoming requests across the fleet.
 
-### Core Topics
+### Load Balancing Algorithms
+
+**Round Robin** — Requests cycle: Server A, B, C, A, B, C... Equal distribution when all servers are the same size. Default in most setups.
+
+**Weighted Round Robin** — Servers with more capacity get proportionally more traffic. 8-core server gets weight 4, 2-core gets weight 1. Server A handles 4x more requests.
+
+**Least Connections** — Each new request goes to the server with the fewest active connections. Best when requests take variable time (some finish in 1ms, others in 5 seconds).
+
+**IP Hash** — Hash the client IP to always route them to the same server. Essential for **sticky sessions** — if Server A stores the user's shopping cart in memory, they must always hit Server A. Downside: uneven distribution if requests cluster by region.
+
+### Layer 4 vs Layer 7
+
+**L4 (TCP)** — Routes at the IP+port level. Extremely fast, doesn't read request content. Use for: raw TCP, database proxies, gaming.
+
+**L7 (HTTP)** — Understands HTTP. Routes by URL path, headers, cookies. `/api/*` goes to API servers, `/images/*` goes to image servers. Nginx and AWS ALB operate here.
+
+### Health Checks — Removing Failed Servers
+
+Every 5 seconds the load balancer sends `GET /health` to each server. Three consecutive failures → server removed from pool automatically. When the server recovers → added back. Your app becomes self-healing without any engineer intervention.
+
+---
+
+## Real-World Analogy - The Bank Teller Analogy
+
+A busy bank has 6 teller windows (servers) but one door (the load balancer). A greeter at the door directs each customer to an available window:
+
+**Round Robin greeter**: sends customers to windows 1, 2, 3, 4, 5, 6, 1, 2, 3... in order. Simple and fair when every transaction takes the same time.
+
+**Least Connections greeter**: watches all windows and always sends the next customer to whichever window has the fewest people being served. Smarter — avoids the window where one customer is doing a complex transaction that takes 15 minutes.
+
+**Health Checks**: if Window 3 has a "Closed" sign, the greeter stops sending customers there immediately and resumes when it reopens.
+
+**Sticky Sessions**: a customer doing a loan application in multiple steps must always see the same teller (they have all the paperwork). The greeter remembers which teller handles which customer.
+
+The greeter never processes transactions themselves — they just optimally direct traffic. That's the load balancer.
+
+---
+
+## Key Concepts
 
 - **Round Robin**
 - **Least Connections**
 - **IP Hash**
 - **Health Checks**
 - **Layer 4 vs Layer 7**
-- **Nginx Load Balancing**
-- **Sticky Sessions**
-
-### Why It Matters
-
-**Load Balancing** is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.
-
-The key engineering mindset: **every design decision is a trade-off**. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.
-
-### Deep Dive
-
-Let's break down each core topic:
-
-**Round Robin**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
-
-**Least Connections**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
-
-**IP Hash**: This is where the real engineering happens. Companies spend months optimising this.
-
-### Common Mistakes to Avoid
-
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
-
----
-
-## 🍎 Real-World Analogy
-
-Think of **Load Balancing** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
-
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
-
----
-
-## 🔑 Key Concepts
-
-- **Round Robin**
-- **Least Connections**
-- **IP Hash**
-- **Health Checks**
-- **Layer 4 vs Layer 7**
-- **Nginx Load Balancing**
+- **Nginx Config**
 - **Sticky Sessions**
 
 ---
 
-## 💛 JavaScript Example
+## JavaScript Example
 
 ```javascript
-// Day 11: Load Balancing
-// ============================================================
-// Practical JavaScript implementation demonstrating:
-// Round Robin, Least Connections, IP Hash
-
-class LoadBalancingDemo {
-  constructor(config = {}) {
-    this.config = { maxRetries: 3, timeout: 5000, ...config };
-    this.stats = { requests: 0, successes: 0, failures: 0, latencyTotal: 0 };
-    console.log(`🚀 Load Balancing Demo initialized`);
-    console.log(`   Config: ${JSON.stringify(this.config)}`);
+// Load balancer implementation with multiple strategies
+class LoadBalancer {
+  constructor(servers) {
+    this.servers = servers.map(s => ({
+      url: s, healthy: true, connections: 0, requests: 0
+    }));
+    this.rrIndex = 0;
   }
 
-  // Core operation
-  async execute(input) {
-    const start = Date.now();
-    this.stats.requests++;
-    try {
-      const result = await this._process(input);
-      this.stats.successes++;
-      this.stats.latencyTotal += Date.now() - start;
-      return { success: true, data: result, latency: Date.now() - start };
-    } catch (error) {
-      this.stats.failures++;
-      console.error(`❌ Error processing ${input}: ${error.message}`);
-      return { success: false, error: error.message };
+  // Round Robin - simple, fair for equal servers
+  roundRobin() {
+    const healthy = this.servers.filter(s => s.healthy);
+    const server  = healthy[this.rrIndex % healthy.length];
+    this.rrIndex++;
+    return server;
+  }
+
+  // Least Connections - best when request durations vary
+  leastConnections() {
+    return this.servers
+      .filter(s => s.healthy)
+      .reduce((min, s) => s.connections < min.connections ? s : min);
+  }
+
+  // IP Hash - same client always hits same server (sticky sessions)
+  ipHash(clientIp) {
+    const hash    = clientIp.split('.').reduce((a, n) => a + parseInt(n), 0);
+    const healthy = this.servers.filter(s => s.healthy);
+    return healthy[hash % healthy.length];
+  }
+
+  async route(clientIp, strategy = 'round-robin') {
+    const server =
+      strategy === 'round-robin'   ? this.roundRobin() :
+      strategy === 'least-conn'    ? this.leastConnections() :
+                                     this.ipHash(clientIp);
+
+    server.connections++;
+    server.requests++;
+    console.log(`${clientIp} -> ${server.url} (${server.connections} active conns)`);
+
+    // Simulate request work
+    await new Promise(r => setTimeout(r, Math.random() * 100));
+    server.connections--;
+    return server.url;
+  }
+
+  // Periodic health check
+  async healthCheck() {
+    for (const server of this.servers) {
+      try {
+        await fetch(`${server.url}/health`);
+        if (!server.healthy) {
+          server.healthy = true;
+          console.log(`+ ${server.url} recovered`);
+        }
+      } catch {
+        server.healthy = false;
+        console.log(`- ${server.url} marked unhealthy`);
+      }
     }
   }
 
-  async _process(input) {
-    // Simulate some processing time
-    await new Promise(r => setTimeout(r, Math.random() * 50));
-    // Core logic representing Round Robin
-    return { input, processed: true, result: `result_of_${input}` };
-  }
-
-  // Show statistics
-  getStats() {
-    const avgLatency = this.stats.requests > 0
-      ? (this.stats.latencyTotal / this.stats.requests).toFixed(2)
-      : 0;
-    return {
-      ...this.stats,
-      successRate: `${((this.stats.successes / (this.stats.requests || 1)) * 100).toFixed(1)}%`,
-      avgLatencyMs: avgLatency
-    };
+  stats() {
+    return this.servers.map(s =>
+      `${s.url}: ${s.requests} reqs, healthy=${s.healthy}`
+    );
   }
 }
 
-// ── Demo ──────────────────────────────────────────────────────
-async function runDemo() {
-  const demo = new LoadBalancingDemo();
+const lb = new LoadBalancer([
+  'http://server-a:3001', 'http://server-b:3002', 'http://server-c:3003'
+]);
 
-  console.log('\n📊 Running 5 sample operations...');
-  const inputs = ['request_A', 'request_B', 'request_C', 'request_D', 'request_E'];
-
-  const results = await Promise.all(inputs.map(i => demo.execute(i)));
-  results.forEach((r, i) => {
-    const icon = r.success ? '✅' : '❌';
-    console.log(`  ${icon} ${inputs[i]}: ${r.success ? `${r.data.result} (${r.latency}ms)` : r.error}`);
-  });
-
-  console.log('\n📈 Final Statistics:');
-  console.log(demo.getStats());
-}
-
-runDemo();
+(async () => {
+  const ips = ['1.2.3.4','5.6.7.8','9.10.11.12','1.2.3.4','13.14.15.16'];
+  console.log('--- Round Robin ---');
+  for (const ip of ips) await lb.route(ip, 'round-robin');
+  console.log('--- IP Hash (same IP = same server) ---');
+  for (const ip of ips) await lb.route(ip, 'ip-hash');
+  console.log(lb.stats());
+})();
 ```
 
 ---
 
-## 🐍 Python Example
+## Python Example
 
 ```python
-# Day 11: Load Balancing
-# ============================================================
-# Practical Python implementation demonstrating:
-# Round Robin, Least Connections, IP Hash
+import threading, time, random
 
-import time
-import random
-import threading
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
-
-@dataclass
-class OperationResult:
-    success: bool
-    data: Any = None
-    error: str = None
-    latency_ms: float = 0.0
-
-class LoadBalancingSystem:
-    # Implementation of Load Balancing concepts
-    # Demonstrates: Round Robin, Least Connections, IP Hash
-
-    def __init__(self, config: Dict = None):
-        self.config = config or {'max_retries': 3, 'timeout': 5.0}
-        self.stats = {'requests': 0, 'successes': 0, 'failures': 0, 'total_latency': 0.0}
+class Server:
+    def __init__(self, name):
+        self.name = name; self.healthy = True
+        self.connections = 0; self.total = 0
         self._lock = threading.Lock()
-        print(f"🚀 Load Balancing System initialized")
-        print(f"   Config: {self.config}")
 
-    def execute(self, input_data: Any) -> OperationResult:
-        # Process a single operation with metrics tracking
-        start = time.time()
-        with self._lock:
-            self.stats['requests'] += 1
+    def handle(self, req_id):
+        with self._lock: self.connections += 1; self.total += 1
+        time.sleep(random.uniform(0.01, 0.15))  # variable work time
+        with self._lock: self.connections -= 1
 
-        try:
-            result = self._process(input_data)
-            latency = (time.time() - start) * 1000
-            with self._lock:
-                self.stats['successes'] += 1
-                self.stats['total_latency'] += latency
-            return OperationResult(success=True, data=result, latency_ms=round(latency, 2))
+class LoadBalancer:
+    def __init__(self, servers):
+        self.servers = servers; self._rr = 0; self._lock = threading.Lock()
 
-        except Exception as e:
-            with self._lock:
-                self.stats['failures'] += 1
-            return OperationResult(success=False, error=str(e))
+    def healthy(self): return [s for s in self.servers if s.healthy]
 
-    def _process(self, input_data: Any) -> Any:
-        # Simulate processing (replace with real implementation)
-        time.sleep(random.uniform(0.01, 0.05))
-        return {'input': input_data, 'processed': True, 'output': f'result_of_{input_data}'}
+    def round_robin(self):
+        h = self.healthy()
+        with self._lock: s = h[self._rr % len(h)]; self._rr += 1
+        return s
 
-    def get_stats(self) -> Dict:
-        with self._lock:
-            total = self.stats['requests']
-            avg_latency = self.stats['total_latency'] / total if total > 0 else 0
-            return {
-                **self.stats,
-                'success_rate': f"{self.stats['successes'] / max(total, 1) * 100:.1f}%",
-                'avg_latency_ms': f"{avg_latency:.2f}ms"
-            }
+    def least_connections(self):
+        return min(self.healthy(), key=lambda s: s.connections)
 
+    def ip_hash(self, ip):
+        h = sum(int(p) for p in ip.split('.') if p.isdigit())
+        return self.healthy()[h % len(self.healthy())]
 
-def run_demo():
-    system = LoadBalancingSystem()
-    print('\n📊 Running 5 sample operations...')
+    def route(self, ip, strategy='round-robin'):
+        if strategy == 'least-conn': return self.least_connections()
+        if strategy == 'ip-hash':    return self.ip_hash(ip)
+        return self.round_robin()
 
-    inputs = ['request_A', 'request_B', 'request_C', 'request_D', 'request_E']
-    for inp in inputs:
-        result = system.execute(inp)
-        if result.success:
-            print(f"  ✅ {inp}: {result.data['output']} ({result.latency_ms}ms)")
-        else:
-            print(f"  ❌ {inp}: {result.error}")
+servers = [Server(f'Server-{c}') for c in 'ABC']
+lb = LoadBalancer(servers)
 
-    print('\n📈 Final Statistics:')
-    for k, v in system.get_stats().items():
-        print(f"  {k}: {v}")
+# Simulate 12 concurrent requests
+threads = []
+for i in range(12):
+    ip  = f'10.0.{random.randint(0,3)}.{random.randint(1,5)}'
+    srv = lb.route(ip, 'least-conn')
+    t   = threading.Thread(target=srv.handle, args=(f'req_{i}',))
+    print(f'req_{i:02d} [{ip}] -> {srv.name} ({srv.connections} active)')
+    threads.append(t); t.start()
+for t in threads: t.join()
 
-
-if __name__ == '__main__':
-    run_demo()
+print("\nFinal stats:")
+for s in servers: print(f"  {s.name}: {s.total} requests handled")
 ```
 
 ---
 
-## 📝 Homework
+## Homework
 
-1. **Research**: Find a real engineering blog post about Round Robin (try engineering.atscale.com, netflixtechblog.com, or engineering.fb.com)
-2. **Code Challenge**: Extend the example above to log every operation to a file with timestamps
-3. **Design Exercise**: Draw a system diagram showing how Load Balancing fits into a ride-sharing app like Uber
-4. **Trade-off Analysis**: What are 3 situations where you would NOT use this approach?
-5. **Interview Practice**: Explain Load Balancing to someone with no tech background using only analogies
-
----
-
-## 📚 Resources
-
-- *Designing Data-Intensive Applications* by Martin Kleppmann (essential reading)
-- *System Design Interview Vol. 1 & 2* by Alex Xu
-- High Scalability Blog — highscalability.com
-- InfoQ Engineering Blog — infoq.com/architecture-design
-- Papers We Love — paperswelove.org (academic papers on distributed systems)
+1. Configure Nginx as a load balancer for 3 local servers using docker-compose - test round_robin and least_conn
+2. What breaks when you add a load balancer to a stateful app without sticky sessions? Give a concrete example
+3. How does AWS Elastic Load Balancer differ from Nginx? List 3 differences
+4. Calculate: if each server handles 800 req/s and you need 12,000 req/s with 20% headroom, how many servers?
 
 ---
 
-*← [Day 10](day_10.md) | [Index](README.md) | [Day 12](day_12.md) →*
+## Resources
+
+- Nginx Load Balancing Docs - nginx.org/en/docs/http/load_balancing.html
+- AWS ALB vs NLB - docs.aws.amazon.com/elasticloadbalancing
+- HAProxy Documentation - haproxy.org
+- Load Balancing Algorithms Explained - kemp.ax
+
+---
+
+*<- [Day 10](day_10.md) | [Index](README.md) | [Day 12](day_12.md) ->*

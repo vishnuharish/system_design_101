@@ -31,32 +31,35 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: The Shard Key Is the Most Important Decision
 
-**Hash Sharding**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+The shard key determines where data lives and which queries are fast. A wrong choice creates hotspots and makes the most common queries touch every shard.
 
-**Range Sharding**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**Avoid write hotspots.** Sharding by `created_at` date range sends all new writes to today's shard while old shards sit idle. This is the single most common sharding mistake. Use high-cardinality keys like `user_id` that distribute writes evenly.
 
-**Directory Sharding**: This is where the real engineering happens. Companies spend months optimising this.
+**Design for query locality.** If most queries are "get all orders for user X", shard by `user_id` — all of that user's orders are on one shard. If you sharded by `order_id`, getting a user's orders requires querying every shard (scatter-gather — expensive).
 
-### Common Mistakes to Avoid
+**The celebrity / hot key problem.** A celebrity with 30M followers and a regular user both happen to land on Shard 3 (same hash result). The celebrity posts once — millions of reads hit only Shard 3, which melts. Solutions: store celebrity data on dedicated resources, or pre-generate and cache celebrity content at the CDN level.
 
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**Resharding is painful.** With naive hashing (`id % N`), adding one shard remaps ~80% of all keys. Consistent hashing (Day 20) reduces this to ~1/N of keys, but any resharding while serving live traffic without downtime is a major engineering challenge.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **Database Sharding** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: Distributing Student Files Across Four Filing Rooms
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+A school with 100,000 students has too many records for one filing room. They split across four rooms.
+
+**Range sharding by surname initial (A–M in Room 1, N–Z in Rooms 2–4).** Simple, but 40% of students have surnames starting A–M. Room 1 is always overwhelmed. That's a hotspot from an uneven distribution.
+
+**Range sharding by admission year.** All new admissions go into this year's room. Old rooms sit idle; the newest room melts every season. Classic write hotspot.
+
+**Hash sharding by roll number.** A formula distributes roll numbers evenly regardless of how names cluster. Roll 1001 → Room 2, Roll 1002 → Room 4. Even distribution, no hotspots.
+
+**Query locality matters.** If teachers most commonly ask "get all records for roll number 4521" — hash by roll number, that's a single-room lookup. If they commonly ask "get all Grade 10 students" — and you sharded by roll number — you must check all 4 rooms (scatter-gather). Design your shard key for your most frequent query.
+
+**Cross-shard query = visiting all four rooms.** "List all students who scored above 90%." The admin must check all 4 rooms, collect results, and merge them at one table. Expensive. Design your shard key to minimise how often this happens.
 
 ---
 

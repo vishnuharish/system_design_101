@@ -32,32 +32,33 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: The Three Hard Problems of Caching
 
-**Cache Hit vs Miss**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+**Problem 1: Stale Data.** You cache a user's profile for 60 seconds. At second 30, the user changes their name. For the next 30 seconds, anyone reading from cache sees the wrong name. Two solutions: short TTL (more DB hits, always fresher data) or proactive invalidation (when the user updates their name, immediately delete the cache key). Most production systems use both — proactive invalidation as the primary mechanism, TTL as the fallback.
 
-**TTL**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**Problem 2: Cache Stampede.** A popular cache key expires. At that exact moment, 5,000 users request it simultaneously. All 5,000 see a cache miss and fire database queries in parallel — potentially crashing the DB. Solution: only one process rebuilds the cache (distributed lock), all others wait and retry. By the time they retry, the cache is populated.
 
-**LRU Eviction**: This is where the real engineering happens. Companies spend months optimising this.
+**Problem 3: What to Cache.** Cache when the same data is requested often, it's expensive to compute, and it changes infrequently. Do NOT cache user-specific private data (security risk — wrong user gets wrong data), data that changes every second (cached version is always stale), or huge objects that evict everything else.
 
-### Common Mistakes to Avoid
-
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**Four caching strategies:** Cache-aside (app checks cache, fetches DB on miss), Write-through (DB write also updates cache), Write-behind (write cache first, DB later — fast writes, risk of data loss), Read-through (cache fetches from DB automatically on miss).
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **Caching Fundamentals** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: A Photocopy of Your Textbook
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+You need to look up the quadratic formula during homework. Two options:
+
+**No cache:** Walk to the school library, find the Maths textbook, look up the formula, note it, walk back. Repeat every single time you need it. 10 minutes per lookup. That's a database query for every request.
+
+**With cache:** You photocopied the key formulas page and keep it in your bag. Need the formula? Open your bag — 2 seconds. Cache hit.
+
+**Cache miss:** You need the integration formulas but didn't photocopy that page. You go to the library, look it up, and this time photocopy that page too. Next time: instant.
+
+**TTL:** Your photocopies are from last year's syllabus. The board updated two formulas. Your cached copy is now wrong even though it hasn't "expired". You must replace it. That's why caches have a Time To Live — periodic forced refresh.
+
+**Proactive invalidation:** Mid-term, your teacher announces a correction to formula on page 45. Your photocopy is wrong immediately — not wrong after the TTL expires. You discard it now and get the corrected version. That's the hard part: knowing when to throw away the copy before it naturally expires.
 
 ---
 

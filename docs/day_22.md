@@ -31,32 +31,29 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: Choosing the Right Protocol
 
-**Stateless HTTP**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+**HTTP (request-response):** Client asks, server answers, connection closes. Stateless — any server handles any request. Perfect for horizontal scaling. Limitation: the server cannot push data to the client without the client asking first. Polling (`GET /score` every 2 seconds) wastes bandwidth and adds latency.
 
-**Persistent WebSocket**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**WebSocket:** One persistent connection, messages can flow in either direction at any time. Server can push data without being asked. Used by: WhatsApp Web, live trading platforms, multiplayer games, Google Docs. Weakness: stateful connections pin users to one server. Horizontal scaling requires a shared pub/sub layer (Redis) to broadcast to all connected users.
 
-**Binary gRPC**: This is where the real engineering happens. Companies spend months optimising this.
+**gRPC:** HTTP/2-based binary protocol using Protocol Buffers. JSON `"age": 25` = 9 bytes. Protobuf = 2 bytes. 4.5× smaller, plus HTTP/2 multiplexing (multiple requests share one TCP connection). Four patterns: unary, server streaming, client streaming, bidirectional streaming. Used for internal microservice-to-microservice communication where performance matters.
 
-### Common Mistakes to Avoid
-
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**Server-Sent Events (SSE):** Unidirectional push from server to client over regular HTTP. Much simpler than WebSocket when you only need server → client push (notifications, live feeds). Works through proxies that might block WebSocket upgrades.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **HTTP vs WebSockets vs gRPC** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: Three Ways to Follow a Live Cricket Score
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+**HTTP polling = refreshing the newspaper website every 30 seconds.** You keep asking "what's the score?" You're doing all the work. Scores may be 30 seconds stale. Simple but inefficient.
+
+**Server-Sent Events = a dedicated scoreboard subscription.** You subscribe once and the scoreboard service pushes you an update every time a wicket falls or runs are scored. One-way broadcast from server to you. Simple, efficient for this use case.
+
+**WebSocket = being in the press box with a two-way radio.** The scorer pushes updates to you the instant anything happens. You can also ask questions back: "Confirm the bowling figures?" Real-time, bidirectional. Used by live fantasy cricket apps where you submit predictions and interact with the platform.
+
+**gRPC = the private data link between the stadium scoring computer and the broadcast network.** Not visible to fans. Binary, compressed, extremely fast transfer of structured match data — overs, runs, wickets, player stats — from the scoring computer to the broadcaster's backend. Strongly typed contract defined in a `.proto` file. Fast, internal, unambiguous.
 
 ---
 

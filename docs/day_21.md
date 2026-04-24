@@ -30,32 +30,37 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: What a Shard Router Must Actually Do
 
-**Shard Router**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+A shard router is the transparent layer between your application and your sharded databases. The application calls `router.get("user:1001")` and gets data back — it doesn't know which physical shard holds it.
 
-**Hash Function**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**Key-to-shard mapping:** given a key, compute the consistent hash and find the correct shard on the ring. O(log N) lookup.
 
-**Rebalancing Logic**: This is where the real engineering happens. Companies spend months optimising this.
+**Connection pooling:** maintain a pool of connections to each shard. Creating a new connection takes ~50ms; reusing a pooled connection takes ~1ms. A router with 5 shards should maintain 5 connection pools.
 
-### Common Mistakes to Avoid
+**Health tracking:** ping each shard's `SELECT 1` every 5 seconds. Three failures → mark the shard unavailable, reject requests for its keys rather than hanging indefinitely.
 
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**Scatter-gather for cross-shard queries:** `router.getAll()` must query all shards in parallel and merge results. Querying 5 shards sequentially takes 5× longer than querying them simultaneously.
+
+**Rebalancing on topology change:** when a shard is added, move the affected keys transparently. Application code must not need to know about resharding. This is the core logic that powers production tools like Vitess (MySQL sharding proxy) and mongos (MongoDB's shard router).
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **Week 3 Project — Sharded DB Simulator** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: A Post Office's Automatic Letter Sorting System
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+A large post office receives thousands of letters per hour and routes each one to the correct local delivery post office (shard).
+
+**The sorting machine (shard router):** reads the PIN code on each letter (hashes the key) and routes it to the correct outgoing bag (shard). The person dropping off letters doesn't need to know which bag their letter goes into.
+
+**Consistent hashing = PIN code area assignment.** When a new sub-post office opens for a new PIN range, only letters for that range move to the new bag — not a complete reassignment of all letters.
+
+**Health check = bag status indicator.** A red light on Bag C means the Kurla post office is temporarily not accepting letters (shard unavailable). The machine routes Kurla-addressed letters to a retry queue until the light goes green, rather than dropping them.
+
+**Scatter-gather = finding all letters to "Priya Sharma" across the city.** The supervisor must check all outgoing bags, find every matching envelope, bring them to one table, and present them together. That's a cross-shard query — every shard must be checked and results merged.
+
+**Connection pooling = pre-loaded delivery vans.** Each local post office has a van permanently parked at its bay. Letters go directly in — no waiting to requisition a new vehicle. That's a connection pool: always ready, always warm.
 
 ---
 

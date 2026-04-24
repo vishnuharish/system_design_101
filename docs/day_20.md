@@ -31,32 +31,29 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: The Problem with Modulo Hashing at Scale
 
-**Hash Ring**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+With `shard = hash(key) % N`, adding or removing even one server remaps almost all existing keys.
 
-**Virtual Nodes**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+4 servers: `hash("user:1001") % 4 = 3` → Server 3. Add a 5th: `hash("user:1001") % 5 = 1` → now Server 1. That key must move. For every key in your cache: ~80% map to a different server. Adding one server forces moving 80% of your data. During the move, cache hit rate drops to near zero and the database is hammered.
 
-**Token Assignment**: This is where the real engineering happens. Companies spend months optimising this.
+**Consistent hashing fixes this.** Arrange servers on a virtual ring (0 to 2³²). Keys are also hashed to ring positions. A key maps to the first server clockwise from its position. Add a 5th server at position X: only keys between X and its predecessor need to move — statistically 1/N of all keys. Adding one server moves only 20% of keys; the other 80% are unaffected.
 
-### Common Mistakes to Avoid
-
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**Virtual nodes prevent uneven distribution.** If servers land unevenly on the ring, one might handle 40% of keys while another handles 5%. Solution: each physical server gets 100–150 virtual positions on the ring. Keys distribute evenly regardless of where server hashes fall. Cassandra, DynamoDB, and Memcached all use virtual nodes.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **Consistent Hashing** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: Assigning Students to Tutors
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+A tutoring centre has 4 tutors and 1,000 students. Assignment rule: `roll_number % 4` determines the tutor.
+
+**Adding a 5th tutor with modulo.** Switch to `% 5`. Student 1001 was with Tutor A (1001%4=1), now goes to Tutor B (1001%5=1). Student 1002 was with Tutor B (1002%4=2), now goes to Tutor D (1002%5=2). Nearly every student changes tutors. All ongoing learning relationships disrupted. That's 80% of cache keys becoming invalid.
+
+**Consistent hashing approach.** Arrange 4 tutors on a circle labelled 0–100. Tutor A: 0–25, Tutor B: 26–50, Tutor C: 51–75, Tutor D: 76–100. Student roll numbers are hashed to circle positions. A 5th tutor joins at position 38: only students previously in the 26–38 range switch from Tutor B to Tutor E. Every other student keeps their tutor. 80% of relationships preserved.
+
+**Virtual nodes = each tutor covers multiple small sections.** Instead of one big range, Tutor A covers positions 5–15, 40–50, and 70–80. Students distribute more evenly and when Tutor A goes on leave (node fails), their students spread across all remaining tutors rather than piling onto one neighbour.
 
 ---
 

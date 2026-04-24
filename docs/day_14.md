@@ -30,32 +30,35 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: Measuring Whether Your Cache Actually Works
 
-**Cache-Aside Pattern**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+A cache you can't measure is a cache you can't improve.
 
-**Write-Through Cache**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**Hit rate = hits / (hits + misses).** A 90% hit rate means 9 in 10 requests are served from cache — only 1 in 10 hits the database. Good for read-heavy data. Below 70% means your TTL is too short, your data isn't reused enough, or keys are being evicted too aggressively.
 
-**Cache Invalidation Strategy**: This is where the real engineering happens. Companies spend months optimising this.
+**Profile by endpoint, not globally.** The report card endpoint (3-table JOIN) is expensive — cache it. The "list my subjects" endpoint (simple SELECT from a small table, 2ms) isn't worth caching. Adding cache to cheap endpoints introduces stale-data risk for zero performance benefit.
 
-### Common Mistakes to Avoid
+**Surgical invalidation, not flush.** When you update a student's score, delete exactly `report:{student_id}` from the cache — not everything. Deleting everything causes a cache stampede: every request hits the database simultaneously. Deleting nothing leaves stale data. Surgical, key-specific invalidation is the production pattern.
 
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**The cold start problem.** After a deployment, the cache is empty. The first 60 seconds: every request misses cache and hits the database. Solution: cache warming — pre-populate the top N most-requested keys immediately at server startup before accepting real traffic.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **Week 2 Project — Add Caching Layer** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: A Library's Quick-Reference Shelf
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+The school library has 10,000 books. The librarian gets 500 requests per day, and 80% are for the same 50 textbooks.
+
+**Without cache:** Every request sends the librarian to the stacks. 500 requests × 5 minutes walking = 41 hours of librarian time per day. Impossible.
+
+**With cache (quick-reference shelf):** The librarian keeps the top 50 books on a small shelf at the desk. 80% of requests are answered in 10 seconds. Only 20% require a trip to the stacks — which the librarian then adds to the shelf for next time.
+
+**Hit rate measurement:** "Today, 420 out of 500 requests were answered from my desk shelf. That's 84% hit rate." If it drops to 60%, the wrong books are on the shelf — time to review which titles are most requested.
+
+**Surgical invalidation:** A new edition of the Chemistry Lab Manual arrives. The librarian immediately removes the old edition from the desk shelf and replaces it — doesn't wait for an arbitrary expiry date. That's proactive cache invalidation on a write.
+
+**Cold start:** First day of term, the shelf is empty. The librarian pre-stocks it with last year's most-requested books before students arrive — cache warming before the rush begins.
 
 ---
 

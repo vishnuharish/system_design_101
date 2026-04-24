@@ -31,32 +31,37 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: The Physics Problem CDNs Solve
 
-**Edge Nodes**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+The speed of light in fibre optic cable is approximately 200,000 km/second. Mumbai to New York is 12,000 km — minimum round-trip: 120ms just from physics. Real routing adds more, typically 200–250ms.
 
-**Origin Server**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+A webpage with 60 asset requests (CSS, JS, images) from a Mumbai server for a New York user: 60 × 200ms = **12 seconds** to load. Unusable.
 
-**Cache-Control Headers**: This is where the real engineering happens. Companies spend months optimising this.
+With Cloudflare's CDN, those assets are cached on a New Jersey edge server 50km from the user: 60 × 5ms = **300ms**. A 40× improvement from physics alone.
 
-### Common Mistakes to Avoid
+**Cache busting prevents serving stale files.** You cache `app.js` for 1 year. Three days later you fix a critical bug. The CDN serves the buggy version for another 362 days. Fix: rename the file using a content hash on every build — `app.a3f5b2c1.js`. New filename = CDN has never seen it = fetches fresh. Old users keep their cached copy until it naturally expires.
 
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**Never cache personalised or private responses on CDN.** `GET /api/me`, shopping carts, and private messages must always have `Cache-Control: private, no-store`. If a CDN caches User A's profile, User B requesting the same URL gets User A's data — a serious security incident.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **CDN — Content Delivery Networks** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: Zomato's Dark Store Network
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+When Zomato Instant promises 10-minute grocery delivery, they don't ship from one central warehouse. They stock small "dark stores" — micro-warehouses stocked with fast-moving items — within 2km of dense residential areas.
+
+**Your origin server = the main Zomato warehouse.** Has everything, but is far away.
+
+**CDN edge nodes = neighbourhood dark stores.** Copies of the most popular items stocked locally. Your order is fulfilled from the nearest dark store — not the central warehouse.
+
+**Cache hit = item in stock at the dark store.** Your request for a product image, CSS file, or JS bundle is served from the nearest edge node in milliseconds.
+
+**Cache miss = item not in the local store.** First visitor from Chennai requests a rarely-accessed file. Chennai edge node doesn't have it — fetches from origin, serves the user, caches it locally for all future Chennai requests.
+
+**TTL = perishable vs non-perishable items.** Fresh bread has a 1-day shelf life (short TTL). Rice sits for months (long TTL, like hashed JS bundles). The dark store clears stale bread without waiting for someone to request it.
+
+**Cache busting = a new product code.** When a new improved product replaces an old one, it gets a new product code. The dark store stocks the new code fresh — the old code is simply no longer ordered. CDN cache busting works identically.
 
 ---
 

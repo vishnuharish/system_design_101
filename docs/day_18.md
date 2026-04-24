@@ -32,32 +32,35 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: The Four Isolation Levels
 
-**Atomicity**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+ACID's "I" has four levels, each trading performance for correctness:
 
-**Consistency**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**READ UNCOMMITTED** — you can read data another transaction hasn't committed yet. If that transaction rolls back, you read data that never officially existed (a "dirty read"). Almost never used.
 
-**Isolation**: This is where the real engineering happens. Companies spend months optimising this.
+**READ COMMITTED** (default in PostgreSQL) — you only see committed data. But if you run the same `SELECT` twice in one transaction and another transaction commits between your reads, you get different results (non-repeatable read).
 
-### Common Mistakes to Avoid
+**REPEATABLE READ** (default in MySQL) — rows you've read won't change for the rest of your transaction. Prevents non-repeatable reads but new rows matching your query can appear (phantom reads).
 
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**SERIALIZABLE** — complete illusion that transactions ran one at a time. No anomalies at all. Significant performance cost — heavy locking. Used for payment systems and inventory where every unit must be exactly right.
+
+**Deadlocks are circular waits.** Transaction A holds lock on Row 1, wants Row 2. Transaction B holds Row 2, wants Row 1. Both wait forever. The database detects the cycle and kills one (the "deadlock victim"), which rolls back and must retry. Your application must be ready to retry killed transactions.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **ACID Transactions** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: A Bank Transfer Between Two Classmates
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+Priya and Arjun both try to transfer ₹500 to the class trip fund at exactly the same moment. Both accounts have exactly ₹500.
+
+**Atomicity = all-or-nothing.** The system debits Priya's account and then crashes before crediting the fund. Without atomicity, ₹500 disappears. With atomicity (BEGIN → debit → credit → COMMIT), both happen or neither does — Priya's ₹500 returns to her on recovery.
+
+**Consistency = total money stays constant.** Before: Priya ₹500 + Fund ₹0 = ₹500 total. After: Priya ₹0 + Fund ₹500 = ₹500 total. Money wasn't created or destroyed. Rules like "balance cannot go below zero" are enforced as part of consistency.
+
+**Isolation = simultaneous transfers don't interfere.** Both Priya and Arjun try to credit the fund simultaneously. Without isolation, both read the fund balance as ₹0, both add ₹500, both write ₹500 — the fund ends up with ₹500 instead of ₹1,000. Isolation ensures each transaction sees a consistent view.
+
+**Durability = once confirmed, it's permanent.** The bank confirms "Transfer complete." Five seconds later, the data centre loses power. When servers restart, Priya's transfer is still there — written to disk and replicated before the confirmation was sent.
 
 ---
 

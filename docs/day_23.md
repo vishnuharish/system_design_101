@@ -31,32 +31,33 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: At-Least-Once Delivery and the Idempotency Requirement
 
-**Producer/Consumer**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+The most common guarantee is **at-least-once**: a message is delivered at minimum once, possibly more if the consumer crashes before acknowledging.
 
-**RabbitMQ**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+Flow: Consumer receives message → starts processing → crashes before sending ACK → queue re-delivers to another consumer → message processed twice.
 
-**Apache Kafka**: This is where the real engineering happens. Companies spend months optimising this.
+**Your code must be idempotent.** Processing the same message twice must have the same effect as processing it once. "Send a welcome email" is NOT idempotent — the user gets two emails. "Set user status to ACTIVE" IS idempotent — setting it twice is the same as once. For non-idempotent operations: store a unique `message_id` per message, check before processing, skip if already processed.
 
-### Common Mistakes to Avoid
+**Dead Letter Queue (DLQ) is non-negotiable.** A message with malformed data fails every time — fail, requeue, fail, requeue. After N retries, move it to the DLQ. Engineers inspect the DLQ, fix the root cause, and replay. Without a DLQ, one bad message blocks the queue permanently.
 
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**Backpressure:** if consumers process 100 messages/second but producers create 1,000/second, the queue grows without bound. Scale consumers horizontally or signal producers to slow down.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **Message Queues** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: The School Administrative Notice Distribution
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+When a teacher submits final marks, three things must happen: update report cards, send SMS to parents, and recalculate class rankings. These three have different speeds and reliability requirements.
+
+**Without a message queue (synchronous chain):** Teacher clicks "Submit." System updates the report card (2s), sends 40 parent SMSes (20s — can fail if telecom is down), recalculates rankings (15s). Teacher is stuck waiting 37 seconds. If SMS fails, the entire submission fails — the report card isn't even saved.
+
+**With a message queue:** Teacher clicks "Submit." System saves marks and publishes one event to the queue. Teacher is told "Submitted successfully" immediately. Three independent workers pick up the event: report card service, SMS service (retries if telecom is down), rankings service. All run in parallel, independently.
+
+**Idempotency:** The SMS service crashes mid-send after sending 20 of 40 SMSes. Queue re-delivers the event. Without idempotency: all 40 parents get a second SMS. With idempotency: each notification has a unique ID — the service checks "has this SMS already been sent to this parent for this event?" and sends only the remaining 20.
+
+**DLQ:** One parent's phone number is invalid — the SMS always fails. After 3 retries, it moves to the DLQ. An admin corrects the number and replays that one message. The other 39 parents were notified correctly without interruption.
 
 ---
 

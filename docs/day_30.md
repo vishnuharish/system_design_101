@@ -30,32 +30,37 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: The 45-Minute System Design Interview Framework
 
-**System Design Framework**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+The most common reason candidates fail isn't lack of knowledge — it's jumping to solutions before understanding the problem.
 
-**Estimation Practice**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**Minutes 0–5: Clarify.** Ask functional questions: "Does it need custom aliases? What's the read/write ratio?" Ask non-functional questions: "How many users? What latency is acceptable?" Asking good questions signals senior thinking.
 
-**Trade-off Analysis**: This is where the real engineering happens. Companies spend months optimising this.
+**Minutes 5–10: Estimate.** "100M URLs created per day, 10B redirects per day." Calculate storage, throughput, bandwidth. These numbers determine whether you need sharding, caching, and CDN. Show your maths out loud.
 
-### Common Mistakes to Avoid
+**Minutes 10–15: Define APIs.** `POST /shorten {url}` → `{short_code}`. `GET /{code}` → HTTP 302 redirect. Defining the API forces you to understand the system before designing it.
 
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**Minutes 15–25: High-level design.** Draw the major boxes: client, load balancer, app servers, database, cache. Walk through the main flows.
+
+**Minutes 25–35: Deep dive.** "How do you generate unique codes at scale?" "How do you handle 10B redirects/day?" This is where your knowledge of ID generation, caching, and sharding pays off.
+
+**Minutes 35–45: Bottlenecks and trade-offs.** What fails first as scale increases? The interviewer evaluates whether you understand the weaknesses of your own design. Every solution has trade-offs — name them before being asked.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **Month 1 Review and Interview Prep** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: An Architect's Client Presentation
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+A senior architect presenting a building design follows the exact same structure.
+
+**Clarify first.** "Before I show plans — how many staff? Is parking for 50 or 500? Do you need a conference facility?" Architects who skip this and present designs for the wrong requirements waste months of work.
+
+**Estimation before drawing.** "2,000 employees × 1 cafeteria visit/day = 2,000 daily visitors. In a 2-hour lunch window: 1,000/hour → 500 seats and 20 serving stations." The numbers drive the floor plan — not aesthetic preference.
+
+**High-level before detailed.** Present the 10 major zones (reception, offices, cafeteria, server room, parking) before showing any individual office layout. Forest before trees.
+
+**Trade-offs, not just solutions.** "Option A: all glass facade — beautiful, but heating costs 40% more. Option B: standard facade — lower cost, invest savings in better interiors." The architect doesn't present one option as obviously correct. They present options with explicit trade-offs. That's the senior engineering mindset interviewers evaluate for.
 
 ---
 

@@ -30,32 +30,32 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: Fan-Out on Write vs Fan-Out on Read
 
-**Tweet Service**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+**Fan-out on write (push):** When User A posts, immediately write the tweet ID to Redis timeline lists for all followers. Reading a timeline is O(1) — just return the pre-cached list. Cost: one tweet for a user with 10M followers = 10M Redis writes. With active celebrities, write infrastructure melts.
 
-**Fan-out Service**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**Fan-out on read (pull):** No writes on post. When a user opens their feed, fetch the list of 500 people they follow, run 500 DB queries, merge and sort. Every timeline load = 500+ queries. At 100M DAU × 10 loads/day = 500 billion DB queries/day. Impossible.
 
-**Timeline Cache**: This is where the real engineering happens. Companies spend months optimising this.
+**The hybrid (Twitter's actual approach):**
+- Regular users (< ~1M followers): fan-out on write. Tweets pushed to all followers' Redis timeline caches.
+- Celebrities (explicitly flagged): no fan-out on write.
+- Timeline assembly: return pre-cached tweet IDs + live-fetch recent celebrity tweets + merge by timestamp.
 
-### Common Mistakes to Avoid
-
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+This means most timeline content is O(1) from Redis, plus a small live fetch for the ~10–30 celebrities any user might follow. Still very fast, avoids catastrophic write amplification for celebrity posts.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **Month 1 Project Day 2 — Twitter Clone Implementation** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: A School's Personalised Morning Bulletin
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+Every student gets a morning bulletin showing posts from teachers they follow and classmate news.
+
+**Fan-out on write (pre-printed personalised bulletin):** When a teacher posts at 8pm, the printing office immediately adds it to every subscribed student's bulletin. Student arrives at 7am — their bulletin is already assembled. Instant read. But: the principal has 2,000 subscribers. Every principal post triggers 2,000 bulletin additions simultaneously.
+
+**Fan-out on read (assemble on demand):** No pre-printing. When a student arrives, they walk to each of their 30 teachers' noticeboards, collect today's posts, and assemble their own bulletin. 30 trips × 2 minutes = 60 minutes of assembly. Unusable.
+
+**The hybrid:** Pre-print bulletins for regular teachers (fan-out on write — manageable print volume). For high-profile staff (principal, department heads) with 500+ subscribers: don't pre-print. When a student's bulletin is assembled, live-fetch the principal's recent posts and insert them at the top. Students get their personalised pre-assembled content instantly, plus the principal's current posts added in a second quick pass.
 
 ---
 

@@ -31,32 +31,27 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: Events vs Commands — A Fundamental Distinction
 
-**Domain Events**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+**Commands** are imperative and directed: "CreateOrder", "SendEmail", "ChargePayment". They tell a specific service to DO something. The sender must know who processes it and expects a success/failure response.
 
-**Commands vs Events**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**Events** are declarative: "OrderCreated", "PaymentSucceeded", "UserRegistered". They announce something that HAS happened. No recipient is specified. Any interested service can subscribe and react. The publisher doesn't know how many services are listening.
 
-**CQRS**: This is where the real engineering happens. Companies spend months optimising this.
+**Events decouple services.** With commands: Order Service calls Payment Service, which calls Inventory, which calls Notification. A chain of synchronous dependencies. Notification being slow makes the entire order slow. With events: Order Service publishes `OrderCreated`. Payment, Inventory, and Notification all subscribe independently. Notification being slow doesn't affect order creation speed.
 
-### Common Mistakes to Avoid
-
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**The Outbox Pattern prevents lost events.** Your service writes to the database AND publishes an event. If the publish fails after the write, the order is saved but nobody knows about it. Solution: write the event to an `outbox` table in the SAME database transaction. A separate relay process reads the outbox and publishes to the broker. Database write and event "publishing" are atomic; actual delivery is eventual but guaranteed.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **Event-Driven Architecture** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: School Enrollment — Command-Driven vs Event-Driven
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+**Command-driven enrollment (synchronous chain).** Admissions officer registers Priya and manually calls each department in sequence: ID office (wait 5 min) → class assignment (wait 3 min) → library (wait 4 min) → IT (wait 6 min). Total: 18 minutes of waiting, one call at a time.
+
+**Event-driven enrollment.** Admissions officer records the enrollment and posts a notice: "New student enrolled: Priya Sharma, Grade 10." All departments react in parallel: ID office creates an ID card, class assignment assigns 10-B, library issues a library card, IT creates an app login. Admissions officer is free in 30 seconds; each department handles their part simultaneously.
+
+**Outbox pattern = the official notice board log.** Instead of pinning notices directly (which might get lost), the admissions officer first writes the notice in the official register (outbox table — same database transaction as the enrollment record). A dedicated prefect reads the register and pins notices to the board. Even if the notice board blows away, the register remains — the prefect can re-pin from it. The enrollment is never lost.
 
 ---
 

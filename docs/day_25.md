@@ -32,32 +32,31 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: What an API Gateway Actually Handles
 
-**Request Routing**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+Without a gateway, every microservice independently implements: auth (verify JWT), rate limiting, request logging, SSL termination, CORS. 30 microservices = 30 implementations of the same cross-cutting concerns. When the JWT algorithm changes, you update 30 services.
 
-**SSL Termination**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**The gateway centralises all of this.** Auth: verify the JWT once at the gateway — all downstream services receive a trusted `X-User-Id` header. They don't re-verify. Rate limiting: one rule at the gateway protects all 30 services simultaneously. Routing: `/api/users/*` → User Service, `/api/orders/*` → Order Service. The client uses one base URL.
 
-**Rate Limiting**: This is where the real engineering happens. Companies spend months optimising this.
+**Response aggregation saves mobile round trips.** A home screen needs data from User Service, Feed Service, and Notification Service. Without aggregation: 3 HTTP calls, 3 × 50ms = 150ms minimum. With aggregation: gateway fans out to all 3 in parallel, merges results, returns one response in ~55ms (the slowest of the three).
 
-### Common Mistakes to Avoid
-
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**SSL termination at the gateway.** Handle HTTPS at the single entry point. Internal services communicate over plain HTTP within the private network. One certificate to manage, not one per service.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **API Gateway** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: A Hotel Reception Desk
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+A large hotel has 12 departments: restaurant, spa, gym, housekeeping, concierge, laundry, room service, pool, business centre, parking, events, and security. Guests don't call each department's internal extension. They call reception — one number, one point of contact.
+
+**Authentication:** Reception verifies your room key card once when you call. When connecting you to room service, they tell room service: "This is a verified guest in Room 412." Room service doesn't re-verify — they trust reception's confirmation.
+
+**Request routing:** "I'd like room service" → reception connects you to the kitchen. "Extra towels" → housekeeping. You don't need to know any department's direct extension.
+
+**Rate limiting:** "We can only accept 3 room service orders per room per hour during peak times." Reception enforces this before the request reaches the kitchen.
+
+**Response aggregation:** "Can you arrange breakfast, towel service, and a 9am taxi?" Reception calls all three departments simultaneously and confirms all three to you in one response. You make one call; reception coordinates the rest.
 
 ---
 

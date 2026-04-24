@@ -32,32 +32,33 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: Why Redis Beats In-Process Cache at Scale
 
-**Strings and Hashes**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+Your Day 8 cache lived inside the application's memory. With one server, that's fine. Scale to 10 servers and each has its own independent cache: user updates their profile on Server 3, which invalidates its own cache. User's next request goes to Server 7 — stale data served for up to TTL seconds.
 
-**Lists and Sets**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**Redis solves this as a shared, external cache.** All 10 servers read from and write to one Redis instance. Server 3 deletes the cache key in Redis — Server 7 sees the miss and fetches fresh data. One source of truth across the entire fleet.
 
-**Sorted Sets**: This is where the real engineering happens. Companies spend months optimising this.
+**Redis is single-threaded but blazing fast.** No lock contention, no thread context switches. Every operation is in memory. Redis handles 100,000+ operations/second on a single instance. For most applications, one instance is enough.
 
-### Common Mistakes to Avoid
+**Atomic operations are Redis's killer feature.** `INCR page:views` reads, increments, and returns the new value in one atomic step. No race condition possible between two concurrent incrementers. This is why Redis is the go-to for rate limiting, session counters, and leaderboards.
 
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**Sorted Sets power real-time leaderboards.** `ZADD leaderboard 9500 priya` adds a score. `ZREVRANGE leaderboard 0 9` returns the top 10 — already sorted — in O(log N). The database would need a heavy `ORDER BY` query for the same result.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **Redis — Distributed Caching** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: A Shared Whiteboard in the Staffroom
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+**Without Redis — each teacher has their own notebook.** Teacher A updates Priya's score in their notebook. Teachers B through J still have the old score. Every teacher has a different version of reality. That's in-process caching on multiple servers.
+
+**With Redis — one shared whiteboard in the staffroom.** Every teacher reads from and writes to the same whiteboard. When Teacher A updates Priya's score, all teachers instantly see the change on their next look. One source of truth. That's Redis as a shared cache.
+
+**Sorted Set = the class rankings section of the whiteboard.** One section always shows students ranked by average score. When Arjun's score improves, the ranking re-sorts automatically. Teachers always see the current top 10 without recalculating. That's `ZADD` and `ZREVRANGE`.
+
+**TTL = "erase after 30 days" note.** Some notices on the whiteboard have a removal date written in the corner. The board prefect erases them automatically on that date. Session tokens, OTP codes, and rate-limit counters in Redis all self-delete when their TTL expires — no cleanup job needed.
+
+**Pub/Sub = the staffroom PA speaker.** When the principal makes an announcement (PUBLISH to a channel), every teacher in the staffroom (SUBSCRIBE) hears it simultaneously without the principal knowing or caring how many are listening.
 
 ---
 

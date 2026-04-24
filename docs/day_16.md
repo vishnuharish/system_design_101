@@ -31,32 +31,31 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: Synchronous vs Asynchronous Replication
 
-**Master-Slave Replication**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+**Synchronous replication:** Primary writes data AND waits for at least one replica to confirm before acknowledging the client. Zero data loss — if primary crashes, the replica has everything. Cost: every write is slower by one network round-trip (~1–5ms in the same region). Used by: financial systems where losing a single confirmed transaction is unacceptable.
 
-**Read Replicas**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**Asynchronous replication (the default):** Primary acknowledges the client immediately after its own write. Replication happens in the background. If primary crashes in the 50ms before the replica syncs, those recent writes are lost. Cost: tiny window of potential data loss. Benefit: writes are as fast as a single-server system. Used by: most web applications where a few milliseconds of lag is acceptable.
 
-**Synchronous vs Asynchronous**: This is where the real engineering happens. Companies spend months optimising this.
+**The read-your-own-writes bug.** User updates their profile photo. Write goes to primary. User immediately refreshes — read is load-balanced to Replica 2, which hasn't received the update yet. User sees their old photo. Solution: for a short window after a write, route that user's reads to the primary. Libraries like PgBouncer handle this automatically.
 
-### Common Mistakes to Avoid
-
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**Failover.** When the primary crashes, a replica is promoted to primary. Tools like Patroni (PostgreSQL) detect the crash via health checks and promote a replica within 30 seconds — typically without engineer intervention.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **Database Replication** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: The Headmaster's Marks Registry and Department Copies
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+The headmaster's office maintains the official, authoritative marks registry (primary database). All mark updates go here first.
+
+**Read replicas = photocopied department registers.** Science, Commerce, and Arts departments each have a copy of all relevant student marks. When a teacher checks a student's grades, they check their department's copy — not the headmaster's original. The headmaster isn't overwhelmed with 50 teachers asking for records every day.
+
+**Asynchronous replication lag.** Copies are updated within seconds of any change to the official registry. A teacher who checks a mark that was entered 30 seconds ago might see the old value if the copy hasn't synced yet. The headmaster confirmed the entry (acknowledged the write), but the department copies aren't updated at the exact same instant.
+
+**Synchronous replication.** The headmaster won't say "confirmed" until Science, Commerce, and Arts departments have all acknowledged they received the update. Slower to confirm each entry, but every department is always perfectly in sync.
+
+**Failover.** If the headmaster's office burns down (primary crashes), one department's certified copy is designated as the new official record. The school continues operating — the replica becomes the new primary.
 
 ---
 

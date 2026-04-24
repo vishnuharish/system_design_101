@@ -33,32 +33,41 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: The DNS Resolution Journey
 
-**DNS Lookup**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+When you type `google.com`, a multi-step lookup happens in under 50ms:
 
-**A Record**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+1. **Browser cache** — recently visited? The IP is already stored locally.
+2. **OS DNS cache / /etc/hosts** — the computer's own DNS cache.
+3. **Recursive resolver** (usually your ISP's DNS server) — asks "what's google.com?"
+4. **Root name servers** (13 globally) — say "for .com, ask Verisign's TLD server."
+5. **TLD server** for `.com` — says "for google.com, ask Google's name servers."
+6. **Google's authoritative name server** — returns the actual IP: `142.250.195.14`.
+7. Result cached at every level for the TTL duration.
 
-**CNAME**: This is where the real engineering happens. Companies spend months optimising this.
+**TTL controls propagation delay.** If you change your A record (server IP) and TTL is 86,400 (24 hours), some users get routed to the old server for up to 24 hours. Pro tip: lower your TTL to 60 seconds a week before any planned server migration, then change the record. Changes propagate globally in 1 minute instead of 24 hours.
 
-### Common Mistakes to Avoid
-
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**GeoDNS routes users to their nearest data centre.** Same domain name returns different IPs based on where the query originates. A query from India returns the Mumbai data centre IP. A query from Germany returns the Frankfurt IP. Same domain, different physical servers — transparent to the user.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **DNS and How the Internet Works** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: India's PIN Code Postal System
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+DNS is structurally identical to how India's postal system routes letters.
+
+**Domain name (`amazon.in`) = the shop name everyone knows.** People say "Amazon" — not the full street address with PIN code.
+
+**Root servers = the Central Post Office.** Doesn't know every address, but knows which regional offices handle which country TLDs. "For `.in`, contact the .IN Registry."
+
+**TLD server = the state regional post office.** Knows which local post offices handle which cities or domains. "For `amazon.in`, contact Amazon India's own name servers."
+
+**Authoritative DNS = Amazon India's own address registry.** Has the exact, official current IP. Returns it definitively.
+
+**Your computer's DNS cache = your postman's address book.** Once your postman has delivered to Amazon's warehouse, he remembers the address. For the next [TTL] days, he goes directly without calling the post office first.
+
+**TTL = "address valid until [date]".** If Amazon moves offices, they update the post office registry. Postmen who memorised the old address still go there until their books expire (TTL). Lowering the TTL before a migration is like sending all postmen a note: "This address changes on October 1st — stop memorising it after September 25th." 
 
 ---
 

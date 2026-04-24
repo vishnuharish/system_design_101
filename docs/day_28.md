@@ -30,32 +30,44 @@ The key engineering mindset: **every design decision is a trade-off**. There is 
 
 ### Deep Dive
 
-Let's break down each core topic:
+### Deep Dive: Capacity Estimation Drives Every Architecture Decision
 
-**Requirements Gathering**: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.
+The single most important skill in system design is estimation — and the numbers you produce determine your entire architecture.
 
-**Capacity Estimation**: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.
+**Twitter-scale example:**
+- 300M monthly active users, 100M DAU
+- Average user posts 1 tweet/day → 100M tweets/day → 1,200 tweets/second
+- Average user reads 200 tweets/day → 20B reads/day → 230,000 reads/second
+- **Read:Write ratio ≈ 200:1** — overwhelmingly read-dominant
 
-**API Design**: This is where the real engineering happens. Companies spend months optimising this.
+This one ratio determines the whole design: aggressive caching, read replicas, pre-generated timelines. Every architectural choice flows from this number.
 
-### Common Mistakes to Avoid
+**Storage estimation forces you to choose a database architecture:**
+- Tweet text: avg 100 bytes × 1,200/sec × 86,400 sec/day × 365 days × 5 years ≈ 19TB for text alone
+- Media (20% of tweets, avg 500KB): ≈ 20PB over 5 years
+- A single PostgreSQL server handles ~10TB comfortably — you need sharding or a distributed database from day one
 
-1. **Over-engineering early**: Don't add complexity before you need it
-2. **Ignoring the trade-offs**: Every choice has costs — acknowledge them
-3. **Not estimating first**: Always estimate scale before choosing a design
-4. **Forgetting failure modes**: What happens when each component fails?
+**Don't start designing without these numbers.** A solution that works for 1,000 users might be architecturally impossible at 100M. Estimation reveals the constraint before you spend months building the wrong thing.
 
 ---
 
 ## 🍎 Real-World Analogy
 
-Think of **Month 1 Project Day 1 — Twitter Clone Architecture** like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)
+### Real-World Analogy: Planning a School Building Before Construction
 
-Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.
+A school board approves a new building for 2,000 students. The architect doesn't start drawing rooms — they first answer capacity questions that drive every design decision.
+
+**Estimation before design:**
+- 2,000 students × 8 periods/day → need 40 classrooms (40 students per class)
+- 80% arrive in a 30-minute window → need 8 entry gates minimum
+- 2,000 students × one 30-minute lunch sitting → canteen needs 2,000 seats and 20 serving counters
+
+**Numbers drive architecture:**
+- 40 classrooms on 5 floors → need 3 stairwells (evacuation calculation)
+- 20 serving counters → requires 2 kitchens (one kitchen can't serve 1,000 people in 30 minutes)
+- 8 entry gates → 300 bus parking bays minimum
+
+**Wrong estimation → wrong architecture.** If the architect assumed 500 students, they'd design one kitchen and 10 classrooms. The building would be impossible to use on day 1. System design works identically: estimating 230,000 reads/second before choosing "one PostgreSQL server" reveals immediately that one server handles only ~5,000 reads/second. The estimation tells you what's needed before you commit to a design.
 
 ---
 
