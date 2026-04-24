@@ -115,25 +115,18 @@
 <p><strong>HTTP vs WebSockets vs gRPC</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Stateless HTTP</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Persistent WebSocket</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Binary gRPC</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-choosing-the-right-protocol">Deep Dive: Choosing the Right Protocol</h3>
+<p><strong>HTTP (request-response):</strong> Client asks, server answers, connection closes. Stateless — any server handles any request. Perfect for horizontal scaling. Limitation: the server cannot push data to the client without the client asking first. Polling (<code>GET /score</code> every 2 seconds) wastes bandwidth and adds latency.</p>
+<p><strong>WebSocket:</strong> One persistent connection, messages can flow in either direction at any time. Server can push data without being asked. Used by: WhatsApp Web, live trading platforms, multiplayer games, Google Docs. Weakness: stateful connections pin users to one server. Horizontal scaling requires a shared pub/sub layer (Redis) to broadcast to all connected users.</p>
+<p><strong>gRPC:</strong> HTTP/2-based binary protocol using Protocol Buffers. JSON <code>"age": 25</code> = 9 bytes. Protobuf = 2 bytes. 4.5× smaller, plus HTTP/2 multiplexing (multiple requests share one TCP connection). Four patterns: unary, server streaming, client streaming, bidirectional streaming. Used for internal microservice-to-microservice communication where performance matters.</p>
+<p><strong>Server-Sent Events (SSE):</strong> Unidirectional push from server to client over regular HTTP. Much simpler than WebSocket when you only need server → client push (notifications, live feeds). Works through proxies that might block WebSocket upgrades.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>HTTP vs WebSockets vs gRPC</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-three-ways-to-follow-a-live-cricket-score">Real-World Analogy: Three Ways to Follow a Live Cricket Score</h3>
+<p><strong>HTTP polling = refreshing the newspaper website every 30 seconds.</strong> You keep asking "what's the score?" You're doing all the work. Scores may be 30 seconds stale. Simple but inefficient.</p>
+<p><strong>Server-Sent Events = a dedicated scoreboard subscription.</strong> You subscribe once and the scoreboard service pushes you an update every time a wicket falls or runs are scored. One-way broadcast from server to you. Simple, efficient for this use case.</p>
+<p><strong>WebSocket = being in the press box with a two-way radio.</strong> The scorer pushes updates to you the instant anything happens. You can also ask questions back: "Confirm the bowling figures?" Real-time, bidirectional. Used by live fantasy cricket apps where you submit predictions and interact with the platform.</p>
+<p><strong>gRPC = the private data link between the stadium scoring computer and the broadcast network.</strong> Not visible to fans. Binary, compressed, extremely fast transfer of structured match data — overs, runs, wickets, player stats — from the scoring computer to the broadcaster's backend. Strongly typed contract defined in a <code>.proto</code> file. Fast, internal, unambiguous.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

@@ -115,25 +115,19 @@
 <p><strong>NoSQL Databases</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Document Store</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Key-Value Store</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Column-Family</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-four-nosql-models-four-different-problems">Deep Dive: Four NoSQL Models, Four Different Problems</h3>
+<p><strong>Document Stores (MongoDB)</strong> store JSON-like objects with no fixed schema. One user document can have 3 hobbies; another might have none. Used by Uber for trip data and eBay for product listings — every product has different attributes.</p>
+<p><strong>Key-Value Stores (Redis, DynamoDB)</strong> are pure dictionaries. Given a key, return the value in sub-millisecond time. Perfect for session storage, feature flags, and rate-limiting counters. If your query is always "give me the thing for key X", key-value is the right model.</p>
+<p><strong>Column-Family Stores (Cassandra)</strong> are optimised for massive write throughput and time-ordered queries. All writes are sequential — 100x faster than random disk I/O. Netflix uses Cassandra to store viewing history for 230 million users: billions of rows, simple queries by user ID and timestamp.</p>
+<p><strong>Graph Databases (Neo4j)</strong> store nodes and edges. "Who are friends-of-friends of User 5 who also like cricket?" is recursive in SQL but a natural traversal in a graph database. Used by LinkedIn for professional connections and fraud detection systems for finding rings of suspicious accounts.</p>
+<p><strong>Never switch to NoSQL because it's fashionable.</strong> Switch because your specific access pattern demands it: flexible schema, extreme write throughput, graph traversals, or pure key lookups at huge scale.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>NoSQL Databases</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-four-storage-systems-in-a-school">Real-World Analogy: Four Storage Systems in a School</h3>
+<p><strong>Document Store = Student Files (flexible folders).</strong> Priya's folder has an allergy certificate, a sports award, and 3 medical forms. Arjun's has only academic records. No two student folders have the same structure — and that's perfectly fine. Document databases work the same way.</p>
+<p><strong>Key-Value Store = Staff ID Card System.</strong> The security guard looks up "ID-4521" and instantly gets the staff member's access level. Pure lookup by key, no searching through names or descriptions. Redis works identically: <code>GET user:session:abc123</code> returns the session in under 1ms.</p>
+<p><strong>Column-Family = Attendance Register.</strong> The register records every student's attendance every period. To find "all absences in March for Grade 10", you scan only the date and status columns — skipping name, address, and parent contact columns. Cassandra's columnar storage makes this column-specific scan extremely fast.</p>
+<p><strong>Graph Database = Contact Tracing Map.</strong> A student tests positive for a contagious illness. "Who sat next to them? Who shared lab equipment? Who was in the same group?" You need to trace relationships between people, not look up records by key. A graph database traverses these connections instantly.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

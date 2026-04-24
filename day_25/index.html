@@ -116,25 +116,19 @@
 <p><strong>API Gateway</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Request Routing</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>SSL Termination</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Rate Limiting</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-what-an-api-gateway-actually-handles">Deep Dive: What an API Gateway Actually Handles</h3>
+<p>Without a gateway, every microservice independently implements: auth (verify JWT), rate limiting, request logging, SSL termination, CORS. 30 microservices = 30 implementations of the same cross-cutting concerns. When the JWT algorithm changes, you update 30 services.</p>
+<p><strong>The gateway centralises all of this.</strong> Auth: verify the JWT once at the gateway — all downstream services receive a trusted <code>X-User-Id</code> header. They don't re-verify. Rate limiting: one rule at the gateway protects all 30 services simultaneously. Routing: <code>/api/users/*</code> → User Service, <code>/api/orders/*</code> → Order Service. The client uses one base URL.</p>
+<p><strong>Response aggregation saves mobile round trips.</strong> A home screen needs data from User Service, Feed Service, and Notification Service. Without aggregation: 3 HTTP calls, 3 × 50ms = 150ms minimum. With aggregation: gateway fans out to all 3 in parallel, merges results, returns one response in ~55ms (the slowest of the three).</p>
+<p><strong>SSL termination at the gateway.</strong> Handle HTTPS at the single entry point. Internal services communicate over plain HTTP within the private network. One certificate to manage, not one per service.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>API Gateway</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-a-hotel-reception-desk">Real-World Analogy: A Hotel Reception Desk</h3>
+<p>A large hotel has 12 departments: restaurant, spa, gym, housekeeping, concierge, laundry, room service, pool, business centre, parking, events, and security. Guests don't call each department's internal extension. They call reception — one number, one point of contact.</p>
+<p><strong>Authentication:</strong> Reception verifies your room key card once when you call. When connecting you to room service, they tell room service: "This is a verified guest in Room 412." Room service doesn't re-verify — they trust reception's confirmation.</p>
+<p><strong>Request routing:</strong> "I'd like room service" → reception connects you to the kitchen. "Extra towels" → housekeeping. You don't need to know any department's direct extension.</p>
+<p><strong>Rate limiting:</strong> "We can only accept 3 room service orders per room per hour during peak times." Reception enforces this before the request reaches the kitchen.</p>
+<p><strong>Response aggregation:</strong> "Can you arrange breakfast, towel service, and a 9am taxi?" Reception calls all three departments simultaneously and confirms all three to you in one response. You make one call; reception coordinates the rest.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

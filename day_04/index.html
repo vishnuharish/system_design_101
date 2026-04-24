@@ -55,31 +55,31 @@
             
             <li class="nav-item" data-bs-level="1"><a href="#day-04-rest-vs-graphql" class="nav-link">Day 04: REST vs GraphQL</a>
               <ul class="nav flex-column">
-            <li class="nav-item" data-bs-level="2"><a href="#theory" class="nav-link">📖 Theory</a>
+            <li class="nav-item" data-bs-level="2"><a href="#theory" class="nav-link">Theory</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#real-world-analogy" class="nav-link">🍎 Real-World Analogy</a>
+            <li class="nav-item" data-bs-level="2"><a href="#real-world-analogy-the-restaurant-menu-analogy" class="nav-link">Real-World Analogy - The Restaurant Menu Analogy</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#key-concepts" class="nav-link">🔑 Key Concepts</a>
+            <li class="nav-item" data-bs-level="2"><a href="#key-concepts" class="nav-link">Key Concepts</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#javascript-example" class="nav-link">💛 JavaScript Example</a>
+            <li class="nav-item" data-bs-level="2"><a href="#javascript-example" class="nav-link">JavaScript Example</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#python-example" class="nav-link">🐍 Python Example</a>
+            <li class="nav-item" data-bs-level="2"><a href="#python-example" class="nav-link">Python Example</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#homework" class="nav-link">📝 Homework</a>
+            <li class="nav-item" data-bs-level="2"><a href="#homework" class="nav-link">Homework</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#resources" class="nav-link">📚 Resources</a>
+            <li class="nav-item" data-bs-level="2"><a href="#resources" class="nav-link">Resources</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -94,235 +94,201 @@
 <blockquote>
 <p><em>Two philosophies for API design</em></p>
 </blockquote>
-<p><strong>Month 1: Foundations › Week 1: Basics of System Design</strong><br />
-<strong>Tags:</strong> <code>Theory</code> <code>JavaScript</code> <code>Python</code><br />
-<strong>Estimated Time:</strong> 90–120 minutes</p>
+<p><strong>Month 1: Foundations &gt; Week 1: Basics of System Design</strong>
+<strong>Tags:</strong> <code>Theory</code> <code>JavaScript</code> <code>Python</code>
+<strong>Estimated Time:</strong> 90-120 minutes</p>
 <hr />
-<h2 id="theory">📖 Theory</h2>
-<h3 id="what-youll-learn-today">What You'll Learn Today</h3>
-<p>Today we explore <strong>REST vs GraphQL</strong> — a fundamental concept you'll encounter when designing large-scale systems. Understanding this well is the difference between a system that breaks under load and one that scales gracefully.</p>
-<h3 id="core-topics">Core Topics</h3>
+<h2 id="theory">Theory</h2>
+<h3 id="rest-the-classic-approach">REST - The Classic Approach</h3>
+<p>REST maps every resource to a URL and uses HTTP verbs to operate on it. Building a profile page requires <strong>3 separate requests</strong>:</p>
 <ul>
-<li><strong>REST Endpoints</strong></li>
-<li><strong>GraphQL Queries</strong></li>
-<li><strong>Over-fetching</strong></li>
-<li><strong>Under-fetching</strong></li>
-<li><strong>Schema</strong></li>
-<li><strong>Resolvers</strong></li>
-<li><strong>Mutations</strong></li>
-<li><strong>Subscriptions</strong></li>
+<li><code>GET /users/42</code> returns 15 fields — you only needed 3 (<strong>over-fetching</strong>)</li>
+<li><code>GET /users/42/posts</code> — separate trip just for posts (<strong>under-fetching</strong> from the first call)</li>
+<li><code>GET /posts/1/comments</code> — yet another trip for comments</li>
 </ul>
-<h3 id="why-it-matters">Why It Matters</h3>
-<p><strong>REST vs GraphQL</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
-<p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
-<h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>REST Endpoints</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>GraphQL Queries</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Over-fetching</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
-<hr />
-<h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>REST vs GraphQL</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
-<hr />
-<h2 id="key-concepts">🔑 Key Concepts</h2>
-<ul>
-<li><strong>REST Endpoints</strong></li>
-<li><strong>GraphQL Queries</strong></li>
-<li><strong>Over-fetching</strong></li>
-<li><strong>Under-fetching</strong></li>
-<li><strong>Schema</strong></li>
-<li><strong>Resolvers</strong></li>
-<li><strong>Mutations</strong></li>
-<li><strong>Subscriptions</strong></li>
-</ul>
-<hr />
-<h2 id="javascript-example">💛 JavaScript Example</h2>
-<pre><code class="language-javascript">// Day 04: REST vs GraphQL
-// ============================================================
-// Practical JavaScript implementation demonstrating:
-// REST Endpoints, GraphQL Queries, Over-fetching
-
-class RESTvsGraphQLDemo {
-  constructor(config = {}) {
-    this.config = { maxRetries: 3, timeout: 5000, ...config };
-    this.stats = { requests: 0, successes: 0, failures: 0, latencyTotal: 0 };
-    console.log(`🚀 REST vs GraphQL Demo initialized`);
-    console.log(`   Config: ${JSON.stringify(this.config)}`);
-  }
-
-  // Core operation
-  async execute(input) {
-    const start = Date.now();
-    this.stats.requests++;
-    try {
-      const result = await this._process(input);
-      this.stats.successes++;
-      this.stats.latencyTotal += Date.now() - start;
-      return { success: true, data: result, latency: Date.now() - start };
-    } catch (error) {
-      this.stats.failures++;
-      console.error(`❌ Error processing ${input}: ${error.message}`);
-      return { success: false, error: error.message };
+<p>Each trip adds network latency. On a mobile phone on 3G, 3 round trips can mean 1-2 extra seconds.</p>
+<h3 id="graphql-ask-for-exactly-what-you-need">GraphQL - Ask for Exactly What You Need</h3>
+<p>Facebook built GraphQL in 2012 for their mobile app (slow networks, millions of users). One endpoint, one request:</p>
+<pre><code class="language-graphql">query {
+  user(id: 42) {
+    name
+    avatar
+    posts(limit: 5) {
+      title
+      likeCount
+      comments { text }
     }
   }
-
-  async _process(input) {
-    // Simulate some processing time
-    await new Promise(r =&gt; setTimeout(r, Math.random() * 50));
-    // Core logic representing REST Endpoints
-    return { input, processed: true, result: `result_of_${input}` };
-  }
-
-  // Show statistics
-  getStats() {
-    const avgLatency = this.stats.requests &gt; 0
-      ? (this.stats.latencyTotal / this.stats.requests).toFixed(2)
-      : 0;
-    return {
-      ...this.stats,
-      successRate: `${((this.stats.successes / (this.stats.requests || 1)) * 100).toFixed(1)}%`,
-      avgLatencyMs: avgLatency
-    };
-  }
 }
-
-// ── Demo ──────────────────────────────────────────────────────
-async function runDemo() {
-  const demo = new RESTvsGraphQLDemo();
-
-  console.log('\n📊 Running 5 sample operations...');
-  const inputs = ['request_A', 'request_B', 'request_C', 'request_D', 'request_E'];
-
-  const results = await Promise.all(inputs.map(i =&gt; demo.execute(i)));
-  results.forEach((r, i) =&gt; {
-    const icon = r.success ? '✅' : '❌';
-    console.log(`  ${icon} ${inputs[i]}: ${r.success ? `${r.data.result} (${r.latency}ms)` : r.error}`);
-  });
-
-  console.log('\n📈 Final Statistics:');
-  console.log(demo.getStats());
-}
-
-runDemo();
 </code></pre>
+<p>One network trip. You get exactly what you asked for — no extra fields, no missing data.</p>
+<h3 id="when-to-choose-each">When to Choose Each</h3>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Choose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Simple CRUD app or public API</td>
+<td>REST</td>
+</tr>
+<tr>
+<td>Mobile app on limited bandwidth</td>
+<td>GraphQL</td>
+</tr>
+<tr>
+<td>Multiple clients needing different shapes</td>
+<td>GraphQL</td>
+</tr>
+<tr>
+<td>Team already knows REST</td>
+<td>REST</td>
+</tr>
+<tr>
+<td>Real-time updates</td>
+<td>GraphQL Subscriptions</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-hidden-graphql-cost">The Hidden GraphQL Cost</h3>
+<p>GraphQL shifts complexity to the backend. Every client can craft any query — so you need query depth limits, complexity analysis, and per-field authorization to prevent abuse. A nested query like <code>user -&gt; friends -&gt; friends -&gt; posts</code> could be infinitely deep without guards.</p>
 <hr />
-<h2 id="python-example">🐍 Python Example</h2>
-<pre><code class="language-python"># Day 04: REST vs GraphQL
-# ============================================================
-# Practical Python implementation demonstrating:
-# REST Endpoints, GraphQL Queries, Over-fetching
-
-import time
-import random
-import threading
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
-
-@dataclass
-class OperationResult:
-    success: bool
-    data: Any = None
-    error: str = None
-    latency_ms: float = 0.0
-
-class RESTvsGraphQLSystem:
-    # Implementation of REST vs GraphQL concepts
-    # Demonstrates: REST Endpoints, GraphQL Queries, Over-fetching
-
-    def __init__(self, config: Dict = None):
-        self.config = config or {'max_retries': 3, 'timeout': 5.0}
-        self.stats = {'requests': 0, 'successes': 0, 'failures': 0, 'total_latency': 0.0}
-        self._lock = threading.Lock()
-        print(f&quot;🚀 REST vs GraphQL System initialized&quot;)
-        print(f&quot;   Config: {self.config}&quot;)
-
-    def execute(self, input_data: Any) -&gt; OperationResult:
-        # Process a single operation with metrics tracking
-        start = time.time()
-        with self._lock:
-            self.stats['requests'] += 1
-
-        try:
-            result = self._process(input_data)
-            latency = (time.time() - start) * 1000
-            with self._lock:
-                self.stats['successes'] += 1
-                self.stats['total_latency'] += latency
-            return OperationResult(success=True, data=result, latency_ms=round(latency, 2))
-
-        except Exception as e:
-            with self._lock:
-                self.stats['failures'] += 1
-            return OperationResult(success=False, error=str(e))
-
-    def _process(self, input_data: Any) -&gt; Any:
-        # Simulate processing (replace with real implementation)
-        time.sleep(random.uniform(0.01, 0.05))
-        return {'input': input_data, 'processed': True, 'output': f'result_of_{input_data}'}
-
-    def get_stats(self) -&gt; Dict:
-        with self._lock:
-            total = self.stats['requests']
-            avg_latency = self.stats['total_latency'] / total if total &gt; 0 else 0
-            return {
-                **self.stats,
-                'success_rate': f&quot;{self.stats['successes'] / max(total, 1) * 100:.1f}%&quot;,
-                'avg_latency_ms': f&quot;{avg_latency:.2f}ms&quot;
-            }
-
-
-def run_demo():
-    system = RESTvsGraphQLSystem()
-    print('\n📊 Running 5 sample operations...')
-
-    inputs = ['request_A', 'request_B', 'request_C', 'request_D', 'request_E']
-    for inp in inputs:
-        result = system.execute(inp)
-        if result.success:
-            print(f&quot;  ✅ {inp}: {result.data['output']} ({result.latency_ms}ms)&quot;)
-        else:
-            print(f&quot;  ❌ {inp}: {result.error}&quot;)
-
-    print('\n📈 Final Statistics:')
-    for k, v in system.get_stats().items():
-        print(f&quot;  {k}: {v}&quot;)
-
-
-if __name__ == '__main__':
-    run_demo()
-</code></pre>
+<h2 id="real-world-analogy-the-restaurant-menu-analogy">Real-World Analogy - The Restaurant Menu Analogy</h2>
+<p>Imagine two restaurants:</p>
+<p><strong>REST restaurant</strong> has a fixed menu. Order "Meal Set A" and you receive soup, bread, salad, main, and dessert — whether you want all of it or not. Simple kitchen, predictable output. But you always get the full set even if you just wanted soup.</p>
+<p><strong>GraphQL restaurant</strong> takes custom orders. "I want just the soup and the chocolate cake." The kitchen assembles exactly what you asked for — no leftovers, no missing items.</p>
+<p>REST = fixed meal sets (every endpoint has a fixed response shape).
+GraphQL = build-your-own plate (each client defines its own response shape).</p>
+<p>Most companies start with REST and only add GraphQL when clients on different platforms (web, mobile, TV apps) start complaining that the fixed sets don't fit their specific needs.</p>
 <hr />
-<h2 id="homework">📝 Homework</h2>
-<ol>
-<li><strong>Research</strong>: Find a real engineering blog post about REST Endpoints (try engineering.atscale.com, netflixtechblog.com, or engineering.fb.com)</li>
-<li><strong>Code Challenge</strong>: Extend the example above to log every operation to a file with timestamps</li>
-<li><strong>Design Exercise</strong>: Draw a system diagram showing how REST vs GraphQL fits into a ride-sharing app like Uber</li>
-<li><strong>Trade-off Analysis</strong>: What are 3 situations where you would NOT use this approach?</li>
-<li><strong>Interview Practice</strong>: Explain REST vs GraphQL to someone with no tech background using only analogies</li>
-</ol>
-<hr />
-<h2 id="resources">📚 Resources</h2>
+<h2 id="key-concepts">Key Concepts</h2>
 <ul>
-<li><em>Designing Data-Intensive Applications</em> by Martin Kleppmann (essential reading)</li>
-<li><em>System Design Interview Vol. 1 &amp; 2</em> by Alex Xu</li>
-<li>High Scalability Blog — highscalability.com</li>
-<li>InfoQ Engineering Blog — infoq.com/architecture-design</li>
-<li>Papers We Love — paperswelove.org (academic papers on distributed systems)</li>
+<li><strong>REST Endpoints</strong></li>
+<li><strong>GraphQL Queries</strong></li>
+<li><strong>Over-fetching</strong></li>
+<li><strong>Under-fetching</strong></li>
+<li><strong>Schema</strong></li>
+<li><strong>Resolvers</strong></li>
+<li><strong>Mutations</strong></li>
+<li><strong>Subscriptions</strong></li>
 </ul>
 <hr />
-<p><em>← <a href="../day_03/">Day 03</a> | <a href="../">Index</a> | <a href="../day_05/">Day 05</a> →</em></p></div>
+<h2 id="javascript-example">JavaScript Example</h2>
+<pre><code class="language-javascript">// REST: multiple round trips + over-fetching
+async function profileREST(userId) {
+  const user     = await fetch(`/api/users/${userId}`).then(r =&gt; r.json());
+  // Problem: user has 15 fields, we needed 3
+  const posts    = await fetch(`/api/users/${userId}/posts`).then(r =&gt; r.json());
+  const comments = await fetch(`/api/posts/${posts[0].id}/comments`).then(r =&gt; r.json());
+  console.log(`Over-fetched: ${Object.keys(user).length} user fields for 3 needed`);
+  return { name: user.name, posts, comments };
+}
+
+// GraphQL: one trip, exact fields
+async function profileGraphQL(userId) {
+  const query = `
+    query($id: ID!) {
+      user(id: $id) {
+        name
+        avatar
+        posts(limit: 5) {
+          title
+          likeCount
+          comments { text }
+        }
+      }
+    }
+  `;
+  const { data } = await fetch('/graphql', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, variables: { id: userId } })
+  }).then(r =&gt; r.json());
+  return data.user;
+}
+
+// Simple GraphQL server with Apollo
+const { ApolloServer, gql } = require('apollo-server');
+const typeDefs = gql`
+  type User { id: ID!, name: String!, posts: [Post!]! }
+  type Post  { id: ID!, title: String!, likeCount: Int! }
+  type Query { user(id: ID!): User }
+  type Mutation { createPost(title: String!, authorId: ID!): Post! }
+`;
+const resolvers = {
+  Query:    { user: (_, { id }) =&gt; ({ id, name: 'Priya' }) },
+  User:     { posts: () =&gt; [{ id: 1, title: 'My Post', likeCount: 42 }] },
+  Mutation: { createPost: (_, { title }) =&gt; ({ id: 99, title, likeCount: 0 }) }
+};
+new ApolloServer({ typeDefs, resolvers }).listen()
+  .then(({ url }) =&gt; console.log(`GraphQL at ${url}`));
+</code></pre>
+<hr />
+<h2 id="python-example">Python Example</h2>
+<pre><code class="language-python">import json
+
+DB_USERS = {
+    1: {'id':1,'name':'Priya','city':'Mumbai','age':15,
+        'bio':'Student','phone':'111','pref':{},'joined':'2024'},
+}
+DB_POSTS = {1: [{'id':10,'title':'System Design','body':'...','likes':5}]}
+
+# REST - returns ALL fields (over-fetching)
+def rest_get_user(uid):
+    user = DB_USERS.get(uid, {})
+    print(f&quot;REST returned {len(user)} fields (caller needed 2)&quot;)
+    return user
+
+def rest_get_posts(uid):
+    return DB_POSTS.get(uid, [])
+
+def build_profile_rest(uid):
+    print(&quot;REST: 2 separate requests...&quot;)
+    user  = rest_get_user(uid)
+    posts = rest_get_posts(uid)
+    return {'name': user['name'], 'city': user['city'], 'posts': posts}
+
+# GraphQL - returns ONLY requested fields
+def graphql_resolve(fields: dict, uid: int) -&gt; dict:
+    user = DB_USERS.get(uid, {})
+    result = {}
+    for field, spec in fields.items():
+        if field == 'posts':
+            raw = DB_POSTS.get(uid, [])
+            result['posts'] = [{k: p[k] for k in spec if k in p} for p in raw]
+        elif field in user:
+            result[field] = user[field]
+    print(f&quot;GraphQL returned exactly {len(result)} requested fields&quot;)
+    return result
+
+print(&quot;=== REST ===&quot;)
+print(json.dumps(build_profile_rest(1), indent=2))
+
+print(&quot;\n=== GraphQL ===&quot;)
+profile = graphql_resolve({'name': True, 'city': True, 'posts': ['title','likes']}, 1)
+print(json.dumps(profile, indent=2))
+</code></pre>
+<hr />
+<h2 id="homework">Homework</h2>
+<ol>
+<li>Design REST endpoints for a blog, then rewrite as a GraphQL schema with queries and mutations</li>
+<li>Query your GitHub profile via both api.github.com (REST) and api.github.com/graphql — compare field counts</li>
+<li>Research: what is the N+1 query problem in GraphQL? Write a code example that triggers it</li>
+<li>When would you NOT choose GraphQL? List 3 scenarios with clear reasoning</li>
+</ol>
+<hr />
+<h2 id="resources">Resources</h2>
+<ul>
+<li>GraphQL official docs - graphql.org/learn</li>
+<li>How to GraphQL (free full course) - howtographql.com</li>
+<li>REST API Design Best Practices - restfulapi.net</li>
+<li>GraphQL vs REST - Apollo Blog - apollographql.com/blog</li>
+</ul>
+<hr />
+<p><em>&lt;- <a href="../day_03/">Day 03</a> | <a href="../">Index</a> | <a href="../day_05/">Day 05</a> -&gt;</em></p></div>
             </div>
         </div>
 

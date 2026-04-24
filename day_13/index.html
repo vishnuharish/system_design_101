@@ -117,25 +117,29 @@
 <p><strong>DNS and How the Internet Works</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>DNS Lookup</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>A Record</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>CNAME</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
+<h3 id="deep-dive-the-dns-resolution-journey">Deep Dive: The DNS Resolution Journey</h3>
+<p>When you type <code>google.com</code>, a multi-step lookup happens in under 50ms:</p>
 <ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
+<li><strong>Browser cache</strong> — recently visited? The IP is already stored locally.</li>
+<li><strong>OS DNS cache / /etc/hosts</strong> — the computer's own DNS cache.</li>
+<li><strong>Recursive resolver</strong> (usually your ISP's DNS server) — asks "what's google.com?"</li>
+<li><strong>Root name servers</strong> (13 globally) — say "for .com, ask Verisign's TLD server."</li>
+<li><strong>TLD server</strong> for <code>.com</code> — says "for google.com, ask Google's name servers."</li>
+<li><strong>Google's authoritative name server</strong> — returns the actual IP: <code>142.250.195.14</code>.</li>
+<li>Result cached at every level for the TTL duration.</li>
 </ol>
+<p><strong>TTL controls propagation delay.</strong> If you change your A record (server IP) and TTL is 86,400 (24 hours), some users get routed to the old server for up to 24 hours. Pro tip: lower your TTL to 60 seconds a week before any planned server migration, then change the record. Changes propagate globally in 1 minute instead of 24 hours.</p>
+<p><strong>GeoDNS routes users to their nearest data centre.</strong> Same domain name returns different IPs based on where the query originates. A query from India returns the Mumbai data centre IP. A query from Germany returns the Frankfurt IP. Same domain, different physical servers — transparent to the user.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>DNS and How the Internet Works</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-indias-pin-code-postal-system">Real-World Analogy: India's PIN Code Postal System</h3>
+<p>DNS is structurally identical to how India's postal system routes letters.</p>
+<p><strong>Domain name (<code>amazon.in</code>) = the shop name everyone knows.</strong> People say "Amazon" — not the full street address with PIN code.</p>
+<p><strong>Root servers = the Central Post Office.</strong> Doesn't know every address, but knows which regional offices handle which country TLDs. "For <code>.in</code>, contact the .IN Registry."</p>
+<p><strong>TLD server = the state regional post office.</strong> Knows which local post offices handle which cities or domains. "For <code>amazon.in</code>, contact Amazon India's own name servers."</p>
+<p><strong>Authoritative DNS = Amazon India's own address registry.</strong> Has the exact, official current IP. Returns it definitively.</p>
+<p><strong>Your computer's DNS cache = your postman's address book.</strong> Once your postman has delivered to Amazon's warehouse, he remembers the address. For the next [TTL] days, he goes directly without calling the post office first.</p>
+<p><strong>TTL = "address valid until [date]".</strong> If Amazon moves offices, they update the post office registry. Postmen who memorised the old address still go there until their books expire (TTL). Lowering the TTL before a migration is like sending all postmen a note: "This address changes on October 1st — stop memorising it after September 25th." </p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

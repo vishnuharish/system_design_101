@@ -116,25 +116,20 @@
 <p><strong>Redis — Distributed Caching</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Strings and Hashes</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Lists and Sets</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Sorted Sets</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-why-redis-beats-in-process-cache-at-scale">Deep Dive: Why Redis Beats In-Process Cache at Scale</h3>
+<p>Your Day 8 cache lived inside the application's memory. With one server, that's fine. Scale to 10 servers and each has its own independent cache: user updates their profile on Server 3, which invalidates its own cache. User's next request goes to Server 7 — stale data served for up to TTL seconds.</p>
+<p><strong>Redis solves this as a shared, external cache.</strong> All 10 servers read from and write to one Redis instance. Server 3 deletes the cache key in Redis — Server 7 sees the miss and fetches fresh data. One source of truth across the entire fleet.</p>
+<p><strong>Redis is single-threaded but blazing fast.</strong> No lock contention, no thread context switches. Every operation is in memory. Redis handles 100,000+ operations/second on a single instance. For most applications, one instance is enough.</p>
+<p><strong>Atomic operations are Redis's killer feature.</strong> <code>INCR page:views</code> reads, increments, and returns the new value in one atomic step. No race condition possible between two concurrent incrementers. This is why Redis is the go-to for rate limiting, session counters, and leaderboards.</p>
+<p><strong>Sorted Sets power real-time leaderboards.</strong> <code>ZADD leaderboard 9500 priya</code> adds a score. <code>ZREVRANGE leaderboard 0 9</code> returns the top 10 — already sorted — in O(log N). The database would need a heavy <code>ORDER BY</code> query for the same result.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>Redis — Distributed Caching</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-a-shared-whiteboard-in-the-staffroom">Real-World Analogy: A Shared Whiteboard in the Staffroom</h3>
+<p><strong>Without Redis — each teacher has their own notebook.</strong> Teacher A updates Priya's score in their notebook. Teachers B through J still have the old score. Every teacher has a different version of reality. That's in-process caching on multiple servers.</p>
+<p><strong>With Redis — one shared whiteboard in the staffroom.</strong> Every teacher reads from and writes to the same whiteboard. When Teacher A updates Priya's score, all teachers instantly see the change on their next look. One source of truth. That's Redis as a shared cache.</p>
+<p><strong>Sorted Set = the class rankings section of the whiteboard.</strong> One section always shows students ranked by average score. When Arjun's score improves, the ranking re-sorts automatically. Teachers always see the current top 10 without recalculating. That's <code>ZADD</code> and <code>ZREVRANGE</code>.</p>
+<p><strong>TTL = "erase after 30 days" note.</strong> Some notices on the whiteboard have a removal date written in the corner. The board prefect erases them automatically on that date. Session tokens, OTP codes, and rate-limit counters in Redis all self-delete when their TTL expires — no cleanup job needed.</p>
+<p><strong>Pub/Sub = the staffroom PA speaker.</strong> When the principal makes an announcement (PUBLISH to a channel), every teacher in the staffroom (SUBSCRIBE) hears it simultaneously without the principal knowing or caring how many are listening.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

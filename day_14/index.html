@@ -114,25 +114,21 @@
 <p><strong>Week 2 Project — Add Caching Layer</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Cache-Aside Pattern</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Write-Through Cache</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Cache Invalidation Strategy</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-measuring-whether-your-cache-actually-works">Deep Dive: Measuring Whether Your Cache Actually Works</h3>
+<p>A cache you can't measure is a cache you can't improve.</p>
+<p><strong>Hit rate = hits / (hits + misses).</strong> A 90% hit rate means 9 in 10 requests are served from cache — only 1 in 10 hits the database. Good for read-heavy data. Below 70% means your TTL is too short, your data isn't reused enough, or keys are being evicted too aggressively.</p>
+<p><strong>Profile by endpoint, not globally.</strong> The report card endpoint (3-table JOIN) is expensive — cache it. The "list my subjects" endpoint (simple SELECT from a small table, 2ms) isn't worth caching. Adding cache to cheap endpoints introduces stale-data risk for zero performance benefit.</p>
+<p><strong>Surgical invalidation, not flush.</strong> When you update a student's score, delete exactly <code>report:{student_id}</code> from the cache — not everything. Deleting everything causes a cache stampede: every request hits the database simultaneously. Deleting nothing leaves stale data. Surgical, key-specific invalidation is the production pattern.</p>
+<p><strong>The cold start problem.</strong> After a deployment, the cache is empty. The first 60 seconds: every request misses cache and hits the database. Solution: cache warming — pre-populate the top N most-requested keys immediately at server startup before accepting real traffic.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>Week 2 Project — Add Caching Layer</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-a-librarys-quick-reference-shelf">Real-World Analogy: A Library's Quick-Reference Shelf</h3>
+<p>The school library has 10,000 books. The librarian gets 500 requests per day, and 80% are for the same 50 textbooks.</p>
+<p><strong>Without cache:</strong> Every request sends the librarian to the stacks. 500 requests × 5 minutes walking = 41 hours of librarian time per day. Impossible.</p>
+<p><strong>With cache (quick-reference shelf):</strong> The librarian keeps the top 50 books on a small shelf at the desk. 80% of requests are answered in 10 seconds. Only 20% require a trip to the stacks — which the librarian then adds to the shelf for next time.</p>
+<p><strong>Hit rate measurement:</strong> "Today, 420 out of 500 requests were answered from my desk shelf. That's 84% hit rate." If it drops to 60%, the wrong books are on the shelf — time to review which titles are most requested.</p>
+<p><strong>Surgical invalidation:</strong> A new edition of the Chemistry Lab Manual arrives. The librarian immediately removes the old edition from the desk shelf and replaces it — doesn't wait for an arbitrary expiry date. That's proactive cache invalidation on a write.</p>
+<p><strong>Cold start:</strong> First day of term, the shelf is empty. The librarian pre-stocks it with last year's most-requested books before students arrive — cache warming before the rush begins.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

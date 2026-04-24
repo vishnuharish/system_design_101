@@ -116,25 +116,19 @@
 <p><strong>Service Mesh</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Sidecar Proxy</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Istio</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Envoy</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-what-service-meshes-remove-from-application-code">Deep Dive: What Service Meshes Remove from Application Code</h3>
+<p>At 10 microservices, engineers manually implement in each service: retries with exponential backoff, timeouts, circuit breakers, mutual TLS, distributed tracing. Implementing all this in Go, Java, Python, and Node.js means four independent implementations that must stay in sync.</p>
+<p><strong>A service mesh moves all of this to a sidecar proxy.</strong> A small Envoy proxy runs alongside every service in the same Kubernetes pod. The application makes a plain HTTP call. The sidecar handles: retrying failed requests, enforcing timeouts, opening the circuit on high error rates, encrypting with mutual TLS, adding trace IDs for distributed tracing.</p>
+<p><strong>The control plane (Istio) configures all sidecars centrally.</strong> Update a retry policy once → all 100 services instantly use the new policy. No code changes, no redeployments.</p>
+<p><strong>Traffic splitting for zero-downtime deployments.</strong> "Send 10% of traffic to v2.0 of Payment Service, 90% to v1.0." Watch error rates. If v2.0 is healthy, shift to 20%, then 100%. If errors appear, instantly revert to 100% v1.0. This is canary deployment — safe, reversible, zero downtime.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>Service Mesh</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-a-schools-personal-assistant-system">Real-World Analogy: A School's Personal Assistant System</h3>
+<p>A large school has 100 teachers (services). Each teacher manages their own communication with inconsistent policies — different follow-up times, different logging, different security checks.</p>
+<p><strong>Without a service mesh:</strong> Teacher A follows up on calls after 30 minutes. Teacher B has a different policy. Teacher C doesn't follow up. When the school changes its communication policy, someone must visit every teacher individually.</p>
+<p><strong>With a service mesh (identical personal assistants — the sidecar):</strong> Each of the 100 teachers gets the same trained personal assistant. Every assistant follows the same rules: "If a call isn't answered in 5 minutes, try again twice. After three failures, mark as unavailable. Log every interaction. Encrypt all communications."</p>
+<p><strong>The headmaster's secretary (Istio control plane):</strong> Sends updated instructions to all 100 assistants at once: "New policy — follow up after 3 minutes instead of 5." All 100 assistants update their behaviour instantly. No teacher changes their personal workflow.</p>
+<p><strong>Traffic splitting = a trainee teacher shadowing.</strong> "Let the new Maths teacher handle 10% of Grade 10 queries while the experienced teacher handles 90%." If the trainee's answers have a high error rate, shift all queries back to the experienced teacher instantly. The sidecar handles this — no student (client) notices the change.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

@@ -116,25 +116,19 @@
 <p><strong>SQL Databases</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Tables and Rows</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Primary Keys</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Foreign Keys</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-why-relationships-are-sqls-superpower">Deep Dive: Why Relationships Are SQL's Superpower</h3>
+<p>SQL databases let tables reference each other through keys. A <code>students</code> table, a <code>subjects</code> table, and a <code>scores</code> table can be joined in one query to answer "what are all Grade 10 students' Maths scores?" — without making three separate requests.</p>
+<p><strong>ACID guarantees prevent data corruption at scale.</strong> When two people transfer money simultaneously, the database must ensure neither transaction sees the other's half-finished state. Isolation levels (READ COMMITTED, REPEATABLE READ, SERIALIZABLE) control exactly how much concurrent transactions can see of each other.</p>
+<p><strong>Indexes are the most important performance tool in SQL.</strong> <code>SELECT * FROM users WHERE email = 'x@y.com'</code> without an index scans every row. With a B-tree index on <code>email</code>, it jumps directly to the matching row in O(log N). At 10 million rows, this is the difference between 30 seconds and 1 millisecond.</p>
+<p><strong>When SQL is the right choice:</strong> structured data with clear relationships, strong consistency requirements (banking, inventory), complex queries joining multiple tables, or any situation where you need ACID guarantees. PostgreSQL powers Instagram, Twitch, and Shopify at massive scale.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>SQL Databases</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-a-schools-paper-record-system">Real-World Analogy: A School's Paper Record System</h3>
+<p>Think of three separate filing cabinets: Student Profiles, Subject Catalogue, and Exam Score Sheets.</p>
+<p><strong>Foreign key = the roll number on every score sheet.</strong> Each sheet has the student's roll number written on it. That number links the score back to the correct student profile.</p>
+<p><strong>JOIN = the admin combining two cabinets.</strong> "Give me Priya's Maths score" — the admin opens Score Sheets, finds Priya's roll number, matches it to the Subject Catalogue, and combines the result. That's exactly what SQL JOIN does.</p>
+<p><strong>Transaction = submitting a complete report card.</strong> The school only accepts a fully signed report card. If the teacher fills in 5 subjects and the pen runs out, the incomplete card is discarded. Either all marks are submitted or none — that's atomicity.</p>
+<p><strong>Index = alphabetical dividers in a cabinet.</strong> Without dividers, finding a student whose surname starts with "P" means flipping through all 800 files. With dividers you jump straight to P. A database index does the same — O(log N) instead of O(N) scan.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

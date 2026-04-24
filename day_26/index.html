@@ -115,25 +115,17 @@
 <p><strong>Event-Driven Architecture</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Domain Events</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Commands vs Events</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>CQRS</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-events-vs-commands-a-fundamental-distinction">Deep Dive: Events vs Commands — A Fundamental Distinction</h3>
+<p><strong>Commands</strong> are imperative and directed: "CreateOrder", "SendEmail", "ChargePayment". They tell a specific service to DO something. The sender must know who processes it and expects a success/failure response.</p>
+<p><strong>Events</strong> are declarative: "OrderCreated", "PaymentSucceeded", "UserRegistered". They announce something that HAS happened. No recipient is specified. Any interested service can subscribe and react. The publisher doesn't know how many services are listening.</p>
+<p><strong>Events decouple services.</strong> With commands: Order Service calls Payment Service, which calls Inventory, which calls Notification. A chain of synchronous dependencies. Notification being slow makes the entire order slow. With events: Order Service publishes <code>OrderCreated</code>. Payment, Inventory, and Notification all subscribe independently. Notification being slow doesn't affect order creation speed.</p>
+<p><strong>The Outbox Pattern prevents lost events.</strong> Your service writes to the database AND publishes an event. If the publish fails after the write, the order is saved but nobody knows about it. Solution: write the event to an <code>outbox</code> table in the SAME database transaction. A separate relay process reads the outbox and publishes to the broker. Database write and event "publishing" are atomic; actual delivery is eventual but guaranteed.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>Event-Driven Architecture</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-school-enrollment-command-driven-vs-event-driven">Real-World Analogy: School Enrollment — Command-Driven vs Event-Driven</h3>
+<p><strong>Command-driven enrollment (synchronous chain).</strong> Admissions officer registers Priya and manually calls each department in sequence: ID office (wait 5 min) → class assignment (wait 3 min) → library (wait 4 min) → IT (wait 6 min). Total: 18 minutes of waiting, one call at a time.</p>
+<p><strong>Event-driven enrollment.</strong> Admissions officer records the enrollment and posts a notice: "New student enrolled: Priya Sharma, Grade 10." All departments react in parallel: ID office creates an ID card, class assignment assigns 10-B, library issues a library card, IT creates an app login. Admissions officer is free in 30 seconds; each department handles their part simultaneously.</p>
+<p><strong>Outbox pattern = the official notice board log.</strong> Instead of pinning notices directly (which might get lost), the admissions officer first writes the notice in the official register (outbox table — same database transaction as the enrollment record). A dedicated prefect reads the register and pins notices to the board. Even if the notice board blows away, the register remains — the prefect can re-pin from it. The enrollment is never lost.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

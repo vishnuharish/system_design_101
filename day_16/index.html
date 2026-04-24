@@ -115,25 +115,19 @@
 <p><strong>Database Replication</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Master-Slave Replication</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Read Replicas</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Synchronous vs Asynchronous</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-synchronous-vs-asynchronous-replication">Deep Dive: Synchronous vs Asynchronous Replication</h3>
+<p><strong>Synchronous replication:</strong> Primary writes data AND waits for at least one replica to confirm before acknowledging the client. Zero data loss — if primary crashes, the replica has everything. Cost: every write is slower by one network round-trip (~1–5ms in the same region). Used by: financial systems where losing a single confirmed transaction is unacceptable.</p>
+<p><strong>Asynchronous replication (the default):</strong> Primary acknowledges the client immediately after its own write. Replication happens in the background. If primary crashes in the 50ms before the replica syncs, those recent writes are lost. Cost: tiny window of potential data loss. Benefit: writes are as fast as a single-server system. Used by: most web applications where a few milliseconds of lag is acceptable.</p>
+<p><strong>The read-your-own-writes bug.</strong> User updates their profile photo. Write goes to primary. User immediately refreshes — read is load-balanced to Replica 2, which hasn't received the update yet. User sees their old photo. Solution: for a short window after a write, route that user's reads to the primary. Libraries like PgBouncer handle this automatically.</p>
+<p><strong>Failover.</strong> When the primary crashes, a replica is promoted to primary. Tools like Patroni (PostgreSQL) detect the crash via health checks and promote a replica within 30 seconds — typically without engineer intervention.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>Database Replication</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-the-headmasters-marks-registry-and-department-copies">Real-World Analogy: The Headmaster's Marks Registry and Department Copies</h3>
+<p>The headmaster's office maintains the official, authoritative marks registry (primary database). All mark updates go here first.</p>
+<p><strong>Read replicas = photocopied department registers.</strong> Science, Commerce, and Arts departments each have a copy of all relevant student marks. When a teacher checks a student's grades, they check their department's copy — not the headmaster's original. The headmaster isn't overwhelmed with 50 teachers asking for records every day.</p>
+<p><strong>Asynchronous replication lag.</strong> Copies are updated within seconds of any change to the official registry. A teacher who checks a mark that was entered 30 seconds ago might see the old value if the copy hasn't synced yet. The headmaster confirmed the entry (acknowledged the write), but the department copies aren't updated at the exact same instant.</p>
+<p><strong>Synchronous replication.</strong> The headmaster won't say "confirmed" until Science, Commerce, and Arts departments have all acknowledged they received the update. Slower to confirm each entry, but every department is always perfectly in sync.</p>
+<p><strong>Failover.</strong> If the headmaster's office burns down (primary crashes), one department's certified copy is designated as the new official record. The school continues operating — the replica becomes the new primary.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

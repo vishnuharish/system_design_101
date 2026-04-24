@@ -116,25 +116,21 @@
 <p><strong>ACID Transactions</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Atomicity</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Consistency</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Isolation</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-the-four-isolation-levels">Deep Dive: The Four Isolation Levels</h3>
+<p>ACID's "I" has four levels, each trading performance for correctness:</p>
+<p><strong>READ UNCOMMITTED</strong> — you can read data another transaction hasn't committed yet. If that transaction rolls back, you read data that never officially existed (a "dirty read"). Almost never used.</p>
+<p><strong>READ COMMITTED</strong> (default in PostgreSQL) — you only see committed data. But if you run the same <code>SELECT</code> twice in one transaction and another transaction commits between your reads, you get different results (non-repeatable read).</p>
+<p><strong>REPEATABLE READ</strong> (default in MySQL) — rows you've read won't change for the rest of your transaction. Prevents non-repeatable reads but new rows matching your query can appear (phantom reads).</p>
+<p><strong>SERIALIZABLE</strong> — complete illusion that transactions ran one at a time. No anomalies at all. Significant performance cost — heavy locking. Used for payment systems and inventory where every unit must be exactly right.</p>
+<p><strong>Deadlocks are circular waits.</strong> Transaction A holds lock on Row 1, wants Row 2. Transaction B holds Row 2, wants Row 1. Both wait forever. The database detects the cycle and kills one (the "deadlock victim"), which rolls back and must retry. Your application must be ready to retry killed transactions.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>ACID Transactions</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-a-bank-transfer-between-two-classmates">Real-World Analogy: A Bank Transfer Between Two Classmates</h3>
+<p>Priya and Arjun both try to transfer ₹500 to the class trip fund at exactly the same moment. Both accounts have exactly ₹500.</p>
+<p><strong>Atomicity = all-or-nothing.</strong> The system debits Priya's account and then crashes before crediting the fund. Without atomicity, ₹500 disappears. With atomicity (BEGIN → debit → credit → COMMIT), both happen or neither does — Priya's ₹500 returns to her on recovery.</p>
+<p><strong>Consistency = total money stays constant.</strong> Before: Priya ₹500 + Fund ₹0 = ₹500 total. After: Priya ₹0 + Fund ₹500 = ₹500 total. Money wasn't created or destroyed. Rules like "balance cannot go below zero" are enforced as part of consistency.</p>
+<p><strong>Isolation = simultaneous transfers don't interfere.</strong> Both Priya and Arjun try to credit the fund simultaneously. Without isolation, both read the fund balance as ₹0, both add ₹500, both write ₹500 — the fund ends up with ₹500 instead of ₹1,000. Isolation ensures each transaction sees a consistent view.</p>
+<p><strong>Durability = once confirmed, it's permanent.</strong> The bank confirms "Transfer complete." Five seconds later, the data centre loses power. When servers restart, Priya's transfer is still there — written to disk and replicated before the confirmation was sent.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

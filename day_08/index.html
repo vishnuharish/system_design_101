@@ -116,25 +116,20 @@
 <p><strong>Caching Fundamentals</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Cache Hit vs Miss</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>TTL</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>LRU Eviction</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-the-three-hard-problems-of-caching">Deep Dive: The Three Hard Problems of Caching</h3>
+<p><strong>Problem 1: Stale Data.</strong> You cache a user's profile for 60 seconds. At second 30, the user changes their name. For the next 30 seconds, anyone reading from cache sees the wrong name. Two solutions: short TTL (more DB hits, always fresher data) or proactive invalidation (when the user updates their name, immediately delete the cache key). Most production systems use both — proactive invalidation as the primary mechanism, TTL as the fallback.</p>
+<p><strong>Problem 2: Cache Stampede.</strong> A popular cache key expires. At that exact moment, 5,000 users request it simultaneously. All 5,000 see a cache miss and fire database queries in parallel — potentially crashing the DB. Solution: only one process rebuilds the cache (distributed lock), all others wait and retry. By the time they retry, the cache is populated.</p>
+<p><strong>Problem 3: What to Cache.</strong> Cache when the same data is requested often, it's expensive to compute, and it changes infrequently. Do NOT cache user-specific private data (security risk — wrong user gets wrong data), data that changes every second (cached version is always stale), or huge objects that evict everything else.</p>
+<p><strong>Four caching strategies:</strong> Cache-aside (app checks cache, fetches DB on miss), Write-through (DB write also updates cache), Write-behind (write cache first, DB later — fast writes, risk of data loss), Read-through (cache fetches from DB automatically on miss).</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>Caching Fundamentals</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-a-photocopy-of-your-textbook">Real-World Analogy: A Photocopy of Your Textbook</h3>
+<p>You need to look up the quadratic formula during homework. Two options:</p>
+<p><strong>No cache:</strong> Walk to the school library, find the Maths textbook, look up the formula, note it, walk back. Repeat every single time you need it. 10 minutes per lookup. That's a database query for every request.</p>
+<p><strong>With cache:</strong> You photocopied the key formulas page and keep it in your bag. Need the formula? Open your bag — 2 seconds. Cache hit.</p>
+<p><strong>Cache miss:</strong> You need the integration formulas but didn't photocopy that page. You go to the library, look it up, and this time photocopy that page too. Next time: instant.</p>
+<p><strong>TTL:</strong> Your photocopies are from last year's syllabus. The board updated two formulas. Your cached copy is now wrong even though it hasn't "expired". You must replace it. That's why caches have a Time To Live — periodic forced refresh.</p>
+<p><strong>Proactive invalidation:</strong> Mid-term, your teacher announces a correction to formula on page 45. Your photocopy is wrong immediately — not wrong after the TTL expires. You discard it now and get the corrected version. That's the hard part: knowing when to throw away the copy before it naturally expires.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

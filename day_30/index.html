@@ -114,25 +114,22 @@
 <p><strong>Month 1 Review and Interview Prep</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>System Design Framework</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Estimation Practice</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Trade-off Analysis</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-the-45-minute-system-design-interview-framework">Deep Dive: The 45-Minute System Design Interview Framework</h3>
+<p>The most common reason candidates fail isn't lack of knowledge — it's jumping to solutions before understanding the problem.</p>
+<p><strong>Minutes 0–5: Clarify.</strong> Ask functional questions: "Does it need custom aliases? What's the read/write ratio?" Ask non-functional questions: "How many users? What latency is acceptable?" Asking good questions signals senior thinking.</p>
+<p><strong>Minutes 5–10: Estimate.</strong> "100M URLs created per day, 10B redirects per day." Calculate storage, throughput, bandwidth. These numbers determine whether you need sharding, caching, and CDN. Show your maths out loud.</p>
+<p><strong>Minutes 10–15: Define APIs.</strong> <code>POST /shorten {url}</code> → <code>{short_code}</code>. <code>GET /{code}</code> → HTTP 302 redirect. Defining the API forces you to understand the system before designing it.</p>
+<p><strong>Minutes 15–25: High-level design.</strong> Draw the major boxes: client, load balancer, app servers, database, cache. Walk through the main flows.</p>
+<p><strong>Minutes 25–35: Deep dive.</strong> "How do you generate unique codes at scale?" "How do you handle 10B redirects/day?" This is where your knowledge of ID generation, caching, and sharding pays off.</p>
+<p><strong>Minutes 35–45: Bottlenecks and trade-offs.</strong> What fails first as scale increases? The interviewer evaluates whether you understand the weaknesses of your own design. Every solution has trade-offs — name them before being asked.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>Month 1 Review and Interview Prep</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-an-architects-client-presentation">Real-World Analogy: An Architect's Client Presentation</h3>
+<p>A senior architect presenting a building design follows the exact same structure.</p>
+<p><strong>Clarify first.</strong> "Before I show plans — how many staff? Is parking for 50 or 500? Do you need a conference facility?" Architects who skip this and present designs for the wrong requirements waste months of work.</p>
+<p><strong>Estimation before drawing.</strong> "2,000 employees × 1 cafeteria visit/day = 2,000 daily visitors. In a 2-hour lunch window: 1,000/hour → 500 seats and 20 serving stations." The numbers drive the floor plan — not aesthetic preference.</p>
+<p><strong>High-level before detailed.</strong> Present the 10 major zones (reception, offices, cafeteria, server room, parking) before showing any individual office layout. Forest before trees.</p>
+<p><strong>Trade-offs, not just solutions.</strong> "Option A: all glass facade — beautiful, but heating costs 40% more. Option B: standard facade — lower cost, invest savings in better interiors." The architect doesn't present one option as obviously correct. They present options with explicit trade-offs. That's the senior engineering mindset interviewers evaluate for.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

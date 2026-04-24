@@ -116,25 +116,19 @@
 <p><strong>Database Indexing</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>B-Tree Index</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Composite Index</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Covering Index</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-why-indexes-change-everything">Deep Dive: Why Indexes Change Everything</h3>
+<p><code>SELECT * FROM users WHERE email = 'priya@example.com'</code> without an index: the database reads every single row. At 10 million users — ~800MB of data read from disk, 30+ seconds, and the table is locked for the duration.</p>
+<p><strong>A B-tree index on <code>email</code></strong> is a sorted binary tree stored separately. Finding any email requires roughly log₂(10M) ≈ 23 comparisons. 23 tree hops at nanoseconds each = under 1ms. Same query, 30,000× faster.</p>
+<p><strong>Composite index column order matters.</strong> <code>CREATE INDEX ON orders(user_id, created_at)</code> serves queries filtering on <code>user_id</code> alone, or <code>user_id + created_at</code> together. It cannot serve queries filtering on <code>created_at</code> alone. Like a phone book sorted by last name then first name — you can look up "Sharma, Priya" but not "all people named Priya" efficiently.</p>
+<p><strong>Every index has a write cost.</strong> INSERT, UPDATE, DELETE must also update every index on the table. A table with 15 indexes can be 10× slower to write to than one with 2. Index the columns you frequently filter/sort on — not every column.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>Database Indexing</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-the-index-at-the-back-of-a-textbook">Real-World Analogy: The Index at the Back of a Textbook</h3>
+<p>You need to find every mention of "Pythagoras" in a 600-page Maths textbook.</p>
+<p><strong>Without an index (full table scan):</strong> Read every page, check every sentence. 600 pages × 30 seconds per page = 5 hours. That's a database query on a large table with no index.</p>
+<p><strong>With the back-of-book index:</strong> Open to the back — "Pythagoras — pages 45, 112, 289, 445." Jump directly to 4 pages. Done in 30 seconds. The index was built once (at printing time) and makes every future lookup instant.</p>
+<p><strong>Composite index = multi-level subject index.</strong> Some textbooks have "Geometry → Triangles → Pythagoras → page 45." You can look up "Geometry" broadly, or "Geometry + Triangles + Pythagoras" for the exact topic. But if you want to find "Theorem" without specifying the parent subject — the hierarchical index doesn't help. Composite database indexes work identically.</p>
+<p><strong>Write cost = reprinting the index for every new edition.</strong> Every time a chapter is added or page numbers shift, the entire index must be regenerated. Every database write must update all indexes on that table. A table with 15 indexes has 15 data structures to update per write.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

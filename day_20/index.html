@@ -115,25 +115,18 @@
 <p><strong>Consistent Hashing</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Hash Ring</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Virtual Nodes</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Token Assignment</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-the-problem-with-modulo-hashing-at-scale">Deep Dive: The Problem with Modulo Hashing at Scale</h3>
+<p>With <code>shard = hash(key) % N</code>, adding or removing even one server remaps almost all existing keys.</p>
+<p>4 servers: <code>hash("user:1001") % 4 = 3</code> → Server 3. Add a 5th: <code>hash("user:1001") % 5 = 1</code> → now Server 1. That key must move. For every key in your cache: ~80% map to a different server. Adding one server forces moving 80% of your data. During the move, cache hit rate drops to near zero and the database is hammered.</p>
+<p><strong>Consistent hashing fixes this.</strong> Arrange servers on a virtual ring (0 to 2³²). Keys are also hashed to ring positions. A key maps to the first server clockwise from its position. Add a 5th server at position X: only keys between X and its predecessor need to move — statistically 1/N of all keys. Adding one server moves only 20% of keys; the other 80% are unaffected.</p>
+<p><strong>Virtual nodes prevent uneven distribution.</strong> If servers land unevenly on the ring, one might handle 40% of keys while another handles 5%. Solution: each physical server gets 100–150 virtual positions on the ring. Keys distribute evenly regardless of where server hashes fall. Cassandra, DynamoDB, and Memcached all use virtual nodes.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>Consistent Hashing</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-assigning-students-to-tutors">Real-World Analogy: Assigning Students to Tutors</h3>
+<p>A tutoring centre has 4 tutors and 1,000 students. Assignment rule: <code>roll_number % 4</code> determines the tutor.</p>
+<p><strong>Adding a 5th tutor with modulo.</strong> Switch to <code>% 5</code>. Student 1001 was with Tutor A (1001%4=1), now goes to Tutor B (1001%5=1). Student 1002 was with Tutor B (1002%4=2), now goes to Tutor D (1002%5=2). Nearly every student changes tutors. All ongoing learning relationships disrupted. That's 80% of cache keys becoming invalid.</p>
+<p><strong>Consistent hashing approach.</strong> Arrange 4 tutors on a circle labelled 0–100. Tutor A: 0–25, Tutor B: 26–50, Tutor C: 51–75, Tutor D: 76–100. Student roll numbers are hashed to circle positions. A 5th tutor joins at position 38: only students previously in the 26–38 range switch from Tutor B to Tutor E. Every other student keeps their tutor. 80% of relationships preserved.</p>
+<p><strong>Virtual nodes = each tutor covers multiple small sections.</strong> Instead of one big range, Tutor A covers positions 5–15, 40–50, and 70–80. Students distribute more evenly and when Tutor A goes on leave (node fails), their students spread across all remaining tutors rather than piling onto one neighbour.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

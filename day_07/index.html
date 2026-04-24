@@ -115,25 +115,21 @@
 <p><strong>Week 1 Project — Grade Tracker API</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>CRUD API</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>SQL Storage</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>In-Memory Cache</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-what-separates-a-good-api-from-a-production-one">Deep Dive: What Separates a Good API from a Production One</h3>
+<p>A beginner's API works. A production API is predictable, safe, and easy to operate.</p>
+<p><strong>Input validation is your first defence.</strong> Never trust client data. If a score field should be 0–100, reject 110 before it touches the database. Return clear errors: <code>{"error": "score must be between 0 and 100", "received": 110}</code>. Validation at the API layer means corrupt data never reaches storage.</p>
+<p><strong>Consistent error shapes matter.</strong> If every error returns the same structure <code>{"error": "message", "field": "which_field"}</code>, clients can write one error-handling function that works everywhere. Inconsistent error formats force clients to write fragile string-parsing code.</p>
+<p><strong>Cache only the expensive endpoints.</strong> The report card endpoint does a three-table JOIN — cache it for 60 seconds. The "list subjects" endpoint is a simple SELECT — not worth caching. When a score is updated, immediately delete that student's cache key. Surgical invalidation beats both "cache nothing" and "cache flush".</p>
+<p><strong>Pagination is not optional.</strong> You have 5 students today. In production you'll have 50,000. <code>GET /students</code> must never return all 50,000 at once. Build <code>?page=1&amp;limit=20</code> from day one — retrofitting it later breaks existing clients.</p>
+<p><strong>Status codes communicate semantics.</strong> <code>201</code> means something was created. <code>409</code> means a conflict (duplicate email). <code>404</code> means the resource doesn't exist. Using <code>200</code> for everything forces clients to parse error messages to understand what happened.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>Week 1 Project — Grade Tracker API</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-building-the-school-offices-student-system">Real-World Analogy: Building the School Office's Student System</h3>
+<p>The principal asks you — the school IT person — to build a system where teachers enter marks, students view report cards, and the principal sees class rankings. That's exactly today's project.</p>
+<p><strong>Input validation = a marks form with constraints.</strong> The form rejects a score above 100 or below 0 before saving anything. A form that accepts invalid data and crashes later is far worse than one that rejects it upfront with a clear message.</p>
+<p><strong>Cache = the summary board in the principal's office.</strong> The principal's dashboard shows the top 10 students. Recalculating this from raw marks every time the principal opens the page is slow. Recalculate every 5 minutes and display the cached result. When a teacher submits new marks, update only that student's cached report card immediately.</p>
+<p><strong>Pagination = the class register shown 30 students at a time.</strong> The register doesn't dump all 800 students on one page. Teachers load page 1 quickly, then page 2. The full dataset is never transferred in one request.</p>
+<p><strong>Consistent errors = a standard rejection slip.</strong> Every rejected form has the same format: "Error: [field] — [reason] — [what to fix]". Teachers know exactly what went wrong and how to correct it, without guessing from a cryptic message.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

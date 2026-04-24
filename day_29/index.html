@@ -114,25 +114,21 @@
 <p><strong>Month 1 Project Day 2 — Twitter Clone Implementation</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Tweet Service</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Fan-out Service</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Timeline Cache</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-fan-out-on-write-vs-fan-out-on-read">Deep Dive: Fan-Out on Write vs Fan-Out on Read</h3>
+<p><strong>Fan-out on write (push):</strong> When User A posts, immediately write the tweet ID to Redis timeline lists for all followers. Reading a timeline is O(1) — just return the pre-cached list. Cost: one tweet for a user with 10M followers = 10M Redis writes. With active celebrities, write infrastructure melts.</p>
+<p><strong>Fan-out on read (pull):</strong> No writes on post. When a user opens their feed, fetch the list of 500 people they follow, run 500 DB queries, merge and sort. Every timeline load = 500+ queries. At 100M DAU × 10 loads/day = 500 billion DB queries/day. Impossible.</p>
+<p><strong>The hybrid (Twitter's actual approach):</strong>
+- Regular users (&lt; ~1M followers): fan-out on write. Tweets pushed to all followers' Redis timeline caches.
+- Celebrities (explicitly flagged): no fan-out on write.
+- Timeline assembly: return pre-cached tweet IDs + live-fetch recent celebrity tweets + merge by timestamp.</p>
+<p>This means most timeline content is O(1) from Redis, plus a small live fetch for the ~10–30 celebrities any user might follow. Still very fast, avoids catastrophic write amplification for celebrity posts.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>Month 1 Project Day 2 — Twitter Clone Implementation</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-a-schools-personalised-morning-bulletin">Real-World Analogy: A School's Personalised Morning Bulletin</h3>
+<p>Every student gets a morning bulletin showing posts from teachers they follow and classmate news.</p>
+<p><strong>Fan-out on write (pre-printed personalised bulletin):</strong> When a teacher posts at 8pm, the printing office immediately adds it to every subscribed student's bulletin. Student arrives at 7am — their bulletin is already assembled. Instant read. But: the principal has 2,000 subscribers. Every principal post triggers 2,000 bulletin additions simultaneously.</p>
+<p><strong>Fan-out on read (assemble on demand):</strong> No pre-printing. When a student arrives, they walk to each of their 30 teachers' noticeboards, collect today's posts, and assemble their own bulletin. 30 trips × 2 minutes = 60 minutes of assembly. Unusable.</p>
+<p><strong>The hybrid:</strong> Pre-print bulletins for regular teachers (fan-out on write — manageable print volume). For high-profile staff (principal, department heads) with 500+ subscribers: don't pre-print. When a student's bulletin is assembled, live-fetch the principal's recent posts and insert them at the top. Students get their personalised pre-assembled content instantly, plus the principal's current posts added in a second quick pass.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>

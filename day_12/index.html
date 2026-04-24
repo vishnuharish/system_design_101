@@ -55,31 +55,31 @@
             
             <li class="nav-item" data-bs-level="1"><a href="#day-12-horizontal-vs-vertical-scaling" class="nav-link">Day 12: Horizontal vs Vertical Scaling</a>
               <ul class="nav flex-column">
-            <li class="nav-item" data-bs-level="2"><a href="#theory" class="nav-link">📖 Theory</a>
+            <li class="nav-item" data-bs-level="2"><a href="#theory" class="nav-link">Theory</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#real-world-analogy" class="nav-link">🍎 Real-World Analogy</a>
+            <li class="nav-item" data-bs-level="2"><a href="#real-world-analogy-the-restaurant-kitchen-analogy" class="nav-link">Real-World Analogy - The Restaurant Kitchen Analogy</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#key-concepts" class="nav-link">🔑 Key Concepts</a>
+            <li class="nav-item" data-bs-level="2"><a href="#key-concepts" class="nav-link">Key Concepts</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#javascript-example" class="nav-link">💛 JavaScript Example</a>
+            <li class="nav-item" data-bs-level="2"><a href="#javascript-example" class="nav-link">JavaScript Example</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#python-example" class="nav-link">🐍 Python Example</a>
+            <li class="nav-item" data-bs-level="2"><a href="#python-example" class="nav-link">Python Example</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#homework" class="nav-link">📝 Homework</a>
+            <li class="nav-item" data-bs-level="2"><a href="#homework" class="nav-link">Homework</a>
               <ul class="nav flex-column">
               </ul>
             </li>
-            <li class="nav-item" data-bs-level="2"><a href="#resources" class="nav-link">📚 Resources</a>
+            <li class="nav-item" data-bs-level="2"><a href="#resources" class="nav-link">Resources</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -92,235 +92,214 @@
 
 <h1 id="day-12-horizontal-vs-vertical-scaling">Day 12: Horizontal vs Vertical Scaling</h1>
 <blockquote>
-<p><em>Growing your system the right way</em></p>
+<p><em>Two strategies for handling more traffic</em></p>
 </blockquote>
-<p><strong>Month 1: Foundations › Week 2: Performance and Infrastructure</strong><br />
-<strong>Tags:</strong> <code>Theory</code> <code>JavaScript</code> <code>Python</code><br />
-<strong>Estimated Time:</strong> 90–120 minutes</p>
+<p><strong>Month 1: Foundations &gt; Week 2: Performance and Infrastructure</strong>
+<strong>Tags:</strong> <code>Theory</code> <code>JavaScript</code> <code>Python</code>
+<strong>Estimated Time:</strong> 90-120 minutes</p>
 <hr />
-<h2 id="theory">📖 Theory</h2>
-<h3 id="what-youll-learn-today">What You'll Learn Today</h3>
-<p>Today we explore <strong>Horizontal vs Vertical Scaling</strong> — a fundamental concept you'll encounter when designing large-scale systems. Understanding this well is the difference between a system that breaks under load and one that scales gracefully.</p>
-<h3 id="core-topics">Core Topics</h3>
+<h2 id="theory">Theory</h2>
+<h3 id="vertical-scaling-scale-up">Vertical Scaling (Scale Up)</h3>
+<p>Replace your server with a bigger one. 4 CPU cores to 32, 16GB RAM to 256GB. Like upgrading from a bicycle to a motorbike.</p>
+<p><strong>Pros</strong>: Simple, no code changes, no architectural complexity.
+<strong>Cons</strong>: Hard ceiling — the biggest cloud instance is finite. Single point of failure — when it crashes, everything stops. Non-linear cost — a 16x machine costs far more than 16x the price.</p>
+<h3 id="horizontal-scaling-scale-out">Horizontal Scaling (Scale Out)</h3>
+<p>Add more servers of the same size and distribute traffic across them. 1 server grows to 10, then 100. Netflix uses thousands of small servers, not one giant one.</p>
+<p><strong>Pros</strong>: Theoretically unlimited scale. No single point of failure. Commodity hardware is cheap.
+<strong>Cons</strong>: Application must be stateless. Requires a load balancer. More complex to manage.</p>
+<h3 id="the-stateless-requirement">The Stateless Requirement</h3>
+<p>For horizontal scaling to work, any server must be able to handle any request. This means NO server-local state:</p>
+<ul>
+<li>Sessions must live in Redis, not in server memory</li>
+<li>Files must live in S3, not on the server's disk  </li>
+<li>JWT tokens carry the user's identity in the request itself</li>
+</ul>
+<p>If Server A stores the user's login session in RAM, routing that user to Server B will log them out. Solution: move all state outside the application servers.</p>
+<h3 id="auto-scaling-the-cloud-superpower">Auto Scaling — The Cloud Superpower</h3>
+<p>AWS, GCP, and Azure support auto scaling groups: add servers when CPU &gt; 70%, remove them when CPU &lt; 20%. Traffic spike at IPL final → 50 servers spin up automatically. 3am quiet period → scales back to 3 servers. You pay only for what you actually use.</p>
+<h3 id="when-to-vertical-vs-horizontal">When to Vertical vs Horizontal</h3>
+<table>
+<thead>
+<tr>
+<th>Use Case</th>
+<th>Strategy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Database primary (hard to shard)</td>
+<td>Vertical first, then read replicas</td>
+</tr>
+<tr>
+<td>Web/API servers (stateless)</td>
+<td>Horizontal — easy and cheap</td>
+</tr>
+<tr>
+<td>Startup or simple app</td>
+<td>Vertical — simpler to operate</td>
+</tr>
+<tr>
+<td>Need 99.99% uptime</td>
+<td>Horizontal — no single point of failure</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="real-world-analogy-the-restaurant-kitchen-analogy">Real-World Analogy - The Restaurant Kitchen Analogy</h2>
+<p>You run a restaurant with one chef. Business is growing.</p>
+<p><strong>Vertical scaling</strong>: Buy your one chef a bigger, faster oven and better tools. She can now cook faster. But there's only so large an oven you can buy, and if she calls in sick, the restaurant closes entirely.</p>
+<p><strong>Horizontal scaling</strong>: Hire three more chefs, each with their own standard oven. Now four chefs cook simultaneously. If one is sick, the other three keep working. As the dinner rush builds, you call in two more part-time chefs (auto scaling). After service, they leave (scale down, pay less).</p>
+<p><strong>The stateless requirement</strong>: All four chefs must use the shared pantry and shared recipe book. If Chef A keeps the secret sauce recipe in his personal notebook and goes home, no one else can make that dish. In software, the "notebook" (session state) must be in shared Redis, not on one server.</p>
+<p><strong>Auto scaling</strong> is like a staffing agency on speed dial — send extra chefs in 2 minutes when you get an unexpected booking flood, and they go home when it quiets down.</p>
+<hr />
+<h2 id="key-concepts">Key Concepts</h2>
 <ul>
 <li><strong>Scale Up</strong></li>
 <li><strong>Scale Out</strong></li>
 <li><strong>Auto Scaling Groups</strong></li>
 <li><strong>Stateless Servers</strong></li>
 <li><strong>Session Affinity</strong></li>
-<li><strong>Cloud Scaling</strong></li>
-<li><strong>Cost Trade-offs</strong></li>
-</ul>
-<h3 id="why-it-matters">Why It Matters</h3>
-<p><strong>Horizontal vs Vertical Scaling</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
-<p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
-<h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Scale Up</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>Scale Out</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Auto Scaling Groups</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
-<hr />
-<h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>Horizontal vs Vertical Scaling</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
-<hr />
-<h2 id="key-concepts">🔑 Key Concepts</h2>
-<ul>
-<li><strong>Scale Up</strong></li>
-<li><strong>Scale Out</strong></li>
-<li><strong>Auto Scaling Groups</strong></li>
-<li><strong>Stateless Servers</strong></li>
-<li><strong>Session Affinity</strong></li>
-<li><strong>Cloud Scaling</strong></li>
-<li><strong>Cost Trade-offs</strong></li>
+<li><strong>Cloud Elasticity</strong></li>
+<li><strong>Cost Comparison</strong></li>
 </ul>
 <hr />
-<h2 id="javascript-example">💛 JavaScript Example</h2>
-<pre><code class="language-javascript">// Day 12: Horizontal vs Vertical Scaling
-// ============================================================
-// Practical JavaScript implementation demonstrating:
-// Scale Up, Scale Out, Auto Scaling Groups
+<h2 id="javascript-example">JavaScript Example</h2>
+<pre><code class="language-javascript">// Simulating vertical vs horizontal scaling capacity limits
 
-class HorizontalvsVerticalScalingDemo {
-  constructor(config = {}) {
-    this.config = { maxRetries: 3, timeout: 5000, ...config };
-    this.stats = { requests: 0, successes: 0, failures: 0, latencyTotal: 0 };
-    console.log(`🚀 Horizontal vs Vertical Scaling Demo initialized`);
-    console.log(`   Config: ${JSON.stringify(this.config)}`);
+class Server {
+  constructor(name, cpuCores, reqPerCore = 100) {
+    this.name = name;
+    this.capacity = cpuCores * reqPerCore;
+    this.load = 0;
+    this.rejected = 0;
+  }
+  handle(reqId) {
+    if (this.load &gt;= this.capacity) { this.rejected++; return false; }
+    this.load++;
+    setTimeout(() =&gt; this.load--, 100); // request takes 100ms
+    return true;
+  }
+  get utilPct() { return (this.load / this.capacity * 100).toFixed(1); }
+}
+
+// Vertical: one 32-core machine
+function testVertical(numRequests) {
+  const server = new Server('Mega-Server', 32);
+  let handled = 0;
+  for (let i = 0; i &lt; numRequests; i++) {
+    if (server.handle(i)) handled++; 
+  }
+  console.log(`Vertical: handled ${handled}/${numRequests}, util ${server.utilPct}%`);
+}
+
+// Horizontal: four 8-core machines
+function testHorizontal(numRequests) {
+  const servers = ['A','B','C','D'].map(n =&gt; new Server(`Server-${n}`, 8));
+  let idx = 0, handled = 0;
+  for (let i = 0; i &lt; numRequests; i++) {
+    const s = servers[idx++ % servers.length];
+    if (s.handle(i)) handled++;
+  }
+  servers.forEach(s =&gt; console.log(`  ${s.name}: util ${s.utilPct}%`));
+  console.log(`Horizontal: handled ${handled}/${numRequests}`);
+}
+
+testVertical(3000);
+testHorizontal(3000);
+
+// Auto Scaling Group simulation
+class AutoScalingGroup {
+  constructor(min=2, max=8, coresPerServer=4) {
+    this.min = min; this.max = max; this.cores = coresPerServer;
+    this.servers = Array.from({length: min}, (_, i) =&gt;
+      new Server(`asg-${i}`, coresPerServer));
   }
 
-  // Core operation
-  async execute(input) {
-    const start = Date.now();
-    this.stats.requests++;
-    try {
-      const result = await this._process(input);
-      this.stats.successes++;
-      this.stats.latencyTotal += Date.now() - start;
-      return { success: true, data: result, latency: Date.now() - start };
-    } catch (error) {
-      this.stats.failures++;
-      console.error(`❌ Error processing ${input}: ${error.message}`);
-      return { success: false, error: error.message };
+  avgUtil() {
+    const totalLoad = this.servers.reduce((s,sv) =&gt; s + sv.load, 0);
+    const totalCap  = this.servers.reduce((s,sv) =&gt; s + sv.capacity, 0);
+    return totalLoad / totalCap;
+  }
+
+  tick() {
+    const u = this.avgUtil();
+    if (u &gt; 0.70 &amp;&amp; this.servers.length &lt; this.max) {
+      this.servers.push(new Server(`asg-${this.servers.length}`, this.cores));
+      console.log(`Scale OUT: ${this.servers.length} servers (util ${(u*100).toFixed(0)}%)`);
+    } else if (u &lt; 0.20 &amp;&amp; this.servers.length &gt; this.min) {
+      this.servers.pop();
+      console.log(`Scale IN:  ${this.servers.length} servers (util ${(u*100).toFixed(0)}%)`);
     }
   }
-
-  async _process(input) {
-    // Simulate some processing time
-    await new Promise(r =&gt; setTimeout(r, Math.random() * 50));
-    // Core logic representing Scale Up
-    return { input, processed: true, result: `result_of_${input}` };
-  }
-
-  // Show statistics
-  getStats() {
-    const avgLatency = this.stats.requests &gt; 0
-      ? (this.stats.latencyTotal / this.stats.requests).toFixed(2)
-      : 0;
-    return {
-      ...this.stats,
-      successRate: `${((this.stats.successes / (this.stats.requests || 1)) * 100).toFixed(1)}%`,
-      avgLatencyMs: avgLatency
-    };
-  }
 }
-
-// ── Demo ──────────────────────────────────────────────────────
-async function runDemo() {
-  const demo = new HorizontalvsVerticalScalingDemo();
-
-  console.log('\n📊 Running 5 sample operations...');
-  const inputs = ['request_A', 'request_B', 'request_C', 'request_D', 'request_E'];
-
-  const results = await Promise.all(inputs.map(i =&gt; demo.execute(i)));
-  results.forEach((r, i) =&gt; {
-    const icon = r.success ? '✅' : '❌';
-    console.log(`  ${icon} ${inputs[i]}: ${r.success ? `${r.data.result} (${r.latency}ms)` : r.error}`);
-  });
-
-  console.log('\n📈 Final Statistics:');
-  console.log(demo.getStats());
-}
-
-runDemo();
 </code></pre>
 <hr />
-<h2 id="python-example">🐍 Python Example</h2>
-<pre><code class="language-python"># Day 12: Horizontal vs Vertical Scaling
-# ============================================================
-# Practical Python implementation demonstrating:
-# Scale Up, Scale Out, Auto Scaling Groups
+<h2 id="python-example">Python Example</h2>
+<pre><code class="language-python">import threading, time, random
 
-import time
-import random
-import threading
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+class Server:
+    def __init__(self, name, cores, rpc=100):
+        self.name = name; self.capacity = cores * rpc
+        self.load = 0; self.total = 0; self._l = threading.Lock()
 
-@dataclass
-class OperationResult:
-    success: bool
-    data: Any = None
-    error: str = None
-    latency_ms: float = 0.0
+    @property
+    def util(self): return self.load / self.capacity
 
-class HorizontalvsVerticalScalingSystem:
-    # Implementation of Horizontal vs Vertical Scaling concepts
-    # Demonstrates: Scale Up, Scale Out, Auto Scaling Groups
+    def handle(self):
+        with self._l:
+            if self.load &gt;= self.capacity: return False
+            self.load += 1; self.total += 1
+        time.sleep(random.uniform(0.02, 0.12))  # variable work
+        with self._l: self.load -= 1
+        return True
 
-    def __init__(self, config: Dict = None):
-        self.config = config or {'max_retries': 3, 'timeout': 5.0}
-        self.stats = {'requests': 0, 'successes': 0, 'failures': 0, 'total_latency': 0.0}
-        self._lock = threading.Lock()
-        print(f&quot;🚀 Horizontal vs Vertical Scaling System initialized&quot;)
-        print(f&quot;   Config: {self.config}&quot;)
+class AutoScalingGroup:
+    def __init__(self, min_s=2, max_s=8, cores=4):
+        self.min = min_s; self.max = max_s; self.cores = cores
+        self.pool = [Server(f's{i}', cores) for i in range(min_s)]
+        self._l = threading.Lock()
 
-    def execute(self, input_data: Any) -&gt; OperationResult:
-        # Process a single operation with metrics tracking
-        start = time.time()
-        with self._lock:
-            self.stats['requests'] += 1
+    def avg_util(self):
+        return sum(s.util for s in self.pool) / len(self.pool)
 
-        try:
-            result = self._process(input_data)
-            latency = (time.time() - start) * 1000
-            with self._lock:
-                self.stats['successes'] += 1
-                self.stats['total_latency'] += latency
-            return OperationResult(success=True, data=result, latency_ms=round(latency, 2))
+    def route(self): return random.choice(self.pool)
 
-        except Exception as e:
-            with self._lock:
-                self.stats['failures'] += 1
-            return OperationResult(success=False, error=str(e))
+    def scale_check(self):
+        u = self.avg_util()
+        with self._l:
+            if u &gt; 0.70 and len(self.pool) &lt; self.max:
+                self.pool.append(Server(f's{len(self.pool)}', self.cores))
+                print(f&quot;  Scale OUT -&gt; {len(self.pool)} servers ({u:.0%} util)&quot;)
+            elif u &lt; 0.20 and len(self.pool) &gt; self.min:
+                self.pool.pop()
+                print(f&quot;  Scale IN  -&gt; {len(self.pool)} servers ({u:.0%} util)&quot;)
 
-    def _process(self, input_data: Any) -&gt; Any:
-        # Simulate processing (replace with real implementation)
-        time.sleep(random.uniform(0.01, 0.05))
-        return {'input': input_data, 'processed': True, 'output': f'result_of_{input_data}'}
-
-    def get_stats(self) -&gt; Dict:
-        with self._lock:
-            total = self.stats['requests']
-            avg_latency = self.stats['total_latency'] / total if total &gt; 0 else 0
-            return {
-                **self.stats,
-                'success_rate': f&quot;{self.stats['successes'] / max(total, 1) * 100:.1f}%&quot;,
-                'avg_latency_ms': f&quot;{avg_latency:.2f}ms&quot;
-            }
-
-
-def run_demo():
-    system = HorizontalvsVerticalScalingSystem()
-    print('\n📊 Running 5 sample operations...')
-
-    inputs = ['request_A', 'request_B', 'request_C', 'request_D', 'request_E']
-    for inp in inputs:
-        result = system.execute(inp)
-        if result.success:
-            print(f&quot;  ✅ {inp}: {result.data['output']} ({result.latency_ms}ms)&quot;)
-        else:
-            print(f&quot;  ❌ {inp}: {result.error}&quot;)
-
-    print('\n📈 Final Statistics:')
-    for k, v in system.get_stats().items():
-        print(f&quot;  {k}: {v}&quot;)
-
-
-if __name__ == '__main__':
-    run_demo()
+asg = AutoScalingGroup(min_s=2, max_s=8, cores=4)
+for label, rps in [(&quot;Low traffic&quot;, 30), (&quot;Rush hour&quot;, 500), (&quot;Post-rush&quot;, 60)]:
+    print(f&quot;\n{label}: {rps} concurrent requests&quot;)
+    threads = [threading.Thread(target=asg.route().handle) for _ in range(rps)]
+    for t in threads: t.start()
+    for t in threads: t.join()
+    asg.scale_check()
 </code></pre>
 <hr />
-<h2 id="homework">📝 Homework</h2>
+<h2 id="homework">Homework</h2>
 <ol>
-<li><strong>Research</strong>: Find a real engineering blog post about Scale Up (try engineering.atscale.com, netflixtechblog.com, or engineering.fb.com)</li>
-<li><strong>Code Challenge</strong>: Extend the example above to log every operation to a file with timestamps</li>
-<li><strong>Design Exercise</strong>: Draw a system diagram showing how Horizontal vs Vertical Scaling fits into a ride-sharing app like Uber</li>
-<li><strong>Trade-off Analysis</strong>: What are 3 situations where you would NOT use this approach?</li>
-<li><strong>Interview Practice</strong>: Explain Horizontal vs Vertical Scaling to someone with no tech background using only analogies</li>
+<li>At what EC2 instance size does vertical scaling stop being cost-effective? Research AWS pricing curves</li>
+<li>List every change you must make to a Flask app to make it horizontally scalable (hint: sessions, files, config)</li>
+<li>Research how Kubernetes Horizontal Pod Autoscaler works — what metrics trigger it?</li>
+<li>Calculate: c5.2xlarge ($0.34/hr, 2000 req/s) vs 10x t3.small ($0.02/hr each, 200 req/s each) for 10k req/s load</li>
 </ol>
 <hr />
-<h2 id="resources">📚 Resources</h2>
+<h2 id="resources">Resources</h2>
 <ul>
-<li><em>Designing Data-Intensive Applications</em> by Martin Kleppmann (essential reading)</li>
-<li><em>System Design Interview Vol. 1 &amp; 2</em> by Alex Xu</li>
-<li>High Scalability Blog — highscalability.com</li>
-<li>InfoQ Engineering Blog — infoq.com/architecture-design</li>
-<li>Papers We Love — paperswelove.org (academic papers on distributed systems)</li>
+<li>The Twelve-Factor App (stateless processes) - 12factor.net</li>
+<li>AWS Auto Scaling Docs - docs.aws.amazon.com/autoscaling</li>
+<li>Kubernetes HPA - kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale</li>
+<li>High Scalability Blog - highscalability.com</li>
 </ul>
 <hr />
-<p><em>← <a href="../day_11/">Day 11</a> | <a href="../">Index</a> | <a href="../day_13/">Day 13</a> →</em></p></div>
+<p><em>&lt;- <a href="../day_11/">Day 11</a> | <a href="../">Index</a> | <a href="../day_13/">Day 13</a> -&gt;</em></p></div>
             </div>
         </div>
 

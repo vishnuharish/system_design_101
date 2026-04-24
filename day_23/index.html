@@ -115,25 +115,20 @@
 <p><strong>Message Queues</strong> is used in production systems at Google, Netflix, Uber, and Amazon. The concepts you learn today appear in system design interviews and every day in engineering work.</p>
 <p>The key engineering mindset: <strong>every design decision is a trade-off</strong>. There is no perfect solution — only the best solution for your specific requirements, scale, and constraints.</p>
 <h3 id="deep-dive">Deep Dive</h3>
-<p>Let's break down each core topic:</p>
-<p><strong>Producer/Consumer</strong>: This is the foundation. Without understanding this, the rest doesn't make sense. Take your time here.</p>
-<p><strong>RabbitMQ</strong>: Once you have the foundation, this builds on top of it. You'll see this in almost every real-world system.</p>
-<p><strong>Apache Kafka</strong>: This is where the real engineering happens. Companies spend months optimising this.</p>
-<h3 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h3>
-<ol>
-<li><strong>Over-engineering early</strong>: Don't add complexity before you need it</li>
-<li><strong>Ignoring the trade-offs</strong>: Every choice has costs — acknowledge them</li>
-<li><strong>Not estimating first</strong>: Always estimate scale before choosing a design</li>
-<li><strong>Forgetting failure modes</strong>: What happens when each component fails?</li>
-</ol>
+<h3 id="deep-dive-at-least-once-delivery-and-the-idempotency-requirement">Deep Dive: At-Least-Once Delivery and the Idempotency Requirement</h3>
+<p>The most common guarantee is <strong>at-least-once</strong>: a message is delivered at minimum once, possibly more if the consumer crashes before acknowledging.</p>
+<p>Flow: Consumer receives message → starts processing → crashes before sending ACK → queue re-delivers to another consumer → message processed twice.</p>
+<p><strong>Your code must be idempotent.</strong> Processing the same message twice must have the same effect as processing it once. "Send a welcome email" is NOT idempotent — the user gets two emails. "Set user status to ACTIVE" IS idempotent — setting it twice is the same as once. For non-idempotent operations: store a unique <code>message_id</code> per message, check before processing, skip if already processed.</p>
+<p><strong>Dead Letter Queue (DLQ) is non-negotiable.</strong> A message with malformed data fails every time — fail, requeue, fail, requeue. After N retries, move it to the DLQ. Engineers inspect the DLQ, fix the root cause, and replay. Without a DLQ, one bad message blocks the queue permanently.</p>
+<p><strong>Backpressure:</strong> if consumers process 100 messages/second but producers create 1,000/second, the queue grows without bound. Scale consumers horizontally or signal producers to slow down.</p>
 <hr />
 <h2 id="real-world-analogy">🍎 Real-World Analogy</h2>
-<p>Think of <strong>Message Queues</strong> like how a large airport operates:
-- Multiple runways handle traffic (parallel processing)
-- Control tower coordinates everything (orchestration)
-- Backup systems activate if something fails (redundancy)
-- Everything is monitored in real time (observability)</p>
-<p>Good system design follows the same principles as good infrastructure design: plan for failure, design for scale, and keep things simple where possible.</p>
+<h3 id="real-world-analogy-the-school-administrative-notice-distribution">Real-World Analogy: The School Administrative Notice Distribution</h3>
+<p>When a teacher submits final marks, three things must happen: update report cards, send SMS to parents, and recalculate class rankings. These three have different speeds and reliability requirements.</p>
+<p><strong>Without a message queue (synchronous chain):</strong> Teacher clicks "Submit." System updates the report card (2s), sends 40 parent SMSes (20s — can fail if telecom is down), recalculates rankings (15s). Teacher is stuck waiting 37 seconds. If SMS fails, the entire submission fails — the report card isn't even saved.</p>
+<p><strong>With a message queue:</strong> Teacher clicks "Submit." System saves marks and publishes one event to the queue. Teacher is told "Submitted successfully" immediately. Three independent workers pick up the event: report card service, SMS service (retries if telecom is down), rankings service. All run in parallel, independently.</p>
+<p><strong>Idempotency:</strong> The SMS service crashes mid-send after sending 20 of 40 SMSes. Queue re-delivers the event. Without idempotency: all 40 parents get a second SMS. With idempotency: each notification has a unique ID — the service checks "has this SMS already been sent to this parent for this event?" and sends only the remaining 20.</p>
+<p><strong>DLQ:</strong> One parent's phone number is invalid — the SMS always fails. After 3 retries, it moves to the DLQ. An admin corrects the number and replays that one message. The other 39 parents were notified correctly without interruption.</p>
 <hr />
 <h2 id="key-concepts">🔑 Key Concepts</h2>
 <ul>
